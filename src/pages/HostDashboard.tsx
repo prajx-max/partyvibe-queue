@@ -9,6 +9,7 @@ import { SongCard } from '@/components/SongCard';
 import { QRCodeDisplay } from '@/components/QRCodeDisplay';
 import { AudioPlayer } from '@/components/AudioPlayer';
 import { SongUpload } from '@/components/SongUpload';
+import { JamendoSearch } from '@/components/JamendoSearch';
 import { SearchBar } from '@/components/SearchBar';
 import { useAuth } from '@/hooks/useAuth';
 import { useSession } from '@/hooks/useSession';
@@ -249,9 +250,10 @@ export default function HostDashboard() {
             </div>
           </div>
 
-          {/* Right column - QR & Upload */}
+          {/* Right column - QR, Search & Upload */}
           <div className="space-y-6">
             <QRCodeDisplay sessionId={session.id} sessionName={session.name} />
+            <JamendoSearch sessionId={session.id} onSongAdded={refetchSongs} />
             <SongUpload sessionId={session.id} onUploadComplete={refetchSongs} />
           </div>
         </div>
