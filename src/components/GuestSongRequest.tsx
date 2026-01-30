@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Search, Music, Plus, Loader2, ExternalLink } from 'lucide-react';
+import { Search, Music, Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface JamendoTrack {
+interface JioSaavnTrack {
   id: string;
   title: string;
   artist: string;
@@ -13,48 +13,49 @@ interface JamendoTrack {
   audioUrl: string;
   imageUrl: string;
   albumName: string;
+  language: string;
 }
 
-interface JamendoSearchProps {
+interface GuestSongRequestProps {
   sessionId: string;
-  onSongAdded: () => void;
+  onSongRequested: () => void;
 }
 
-export function JamendoSearch({ sessionId, onSongAdded }: JamendoSearchProps) {
+export function GuestSongRequest({ sessionId, onSongRequested }: GuestSongRequestProps) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<JamendoTrack[]>([]);
+  const [results, setResults] = useState<JioSaavnTrack[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [addingIds, setAddingIds] = useState<Set<string>>(new Set());
+  const [requestingIds, setRequestingIds] = useState<Set<string>>(new Set());
 
   const searchTracks = async () => {
     if (!query.trim()) return;
 
     setIsSearching(true);
     try {
-      const { data, error } = await supabase.functions.invoke('jamendo-search', {
-        body: { query: query.trim(), limit: 15 },
+      const { data, error } = await supabase.functions.invoke('jiosaavn-search', {
+        body: { query: query.trim(), limit: 10 },
       });
 
       if (error) throw error;
 
       setResults(data.tracks || []);
-      
+
       if (data.tracks?.length === 0) {
-        toast.info('No tracks found. Try a different search term.');
+        toast.info('No songs found. Try a different search.');
       }
     } catch (error) {
       console.error('Search error:', error);
-      toast.error('Failed to search tracks');
+      toast.error('Failed to search songs');
     } finally {
       setIsSearching(false);
     }
   };
 
-  const addTrack = async (track: JamendoTrack) => {
-    setAddingIds((prev) => new Set(prev).add(track.id));
+  const requestTrack = async (track: JioSaavnTrack) => {
+    setRequestingIds((prev) => new Set(prev).add(track.id));
 
     try {
-      // Add song directly with Jamendo stream URL
+      // Add song to the queue (guests can request songs)
       const { error } = await supabase.from('songs').insert({
         session_id: sessionId,
         title: track.title,
@@ -65,16 +66,16 @@ export function JamendoSearch({ sessionId, onSongAdded }: JamendoSearchProps) {
 
       if (error) throw error;
 
-      toast.success(`Added "${track.title}"`);
-      onSongAdded();
-      
-      // Remove from results after adding
+      toast.success(`Requested "${track.title}"`);
+      onSongRequested();
+
+      // Remove from results after requesting
       setResults((prev) => prev.filter((t) => t.id !== track.id));
     } catch (error) {
-      console.error('Add track error:', error);
-      toast.error('Failed to add track');
+      console.error('Request error:', error);
+      toast.error('Failed to request song');
     } finally {
-      setAddingIds((prev) => {
+      setRequestingIds((prev) => {
         const next = new Set(prev);
         next.delete(track.id);
         return next;
@@ -96,24 +97,14 @@ export function JamendoSearch({ sessionId, onSongAdded }: JamendoSearchProps) {
 
   return (
     <div className="rounded-xl bg-card border border-border p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <h3 className="font-display text-lg font-semibold">Search Free Music</h3>
-        <a
-          href="https://www.jamendo.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1"
-        >
-          via Jamendo <ExternalLink className="h-3 w-3" />
-        </a>
-      </div>
+      <h3 className="font-display text-lg font-semibold mb-4">Request a Song</h3>
 
       {/* Search input */}
       <div className="flex gap-2 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search songs, artists..."
+            placeholder="Search for a song..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -127,7 +118,7 @@ export function JamendoSearch({ sessionId, onSongAdded }: JamendoSearchProps) {
 
       {/* Results */}
       {results.length > 0 && (
-        <div className="space-y-2 max-h-[350px] overflow-y-auto">
+        <div className="space-y-2 max-h-[300px] overflow-y-auto">
           {results.map((track) => (
             <div
               key={track.id}
@@ -138,35 +129,36 @@ export function JamendoSearch({ sessionId, onSongAdded }: JamendoSearchProps) {
                 <img
                   src={track.imageUrl}
                   alt={track.albumName}
-                  className="h-12 w-12 rounded-lg object-cover"
+                  className="h-10 w-10 rounded-lg object-cover"
                 />
               ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-background">
-                  <Music className="h-5 w-5 text-muted-foreground" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-background">
+                  <Music className="h-4 w-4 text-muted-foreground" />
                 </div>
               )}
 
               {/* Track info */}
               <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">{track.title}</p>
-                <p className="text-sm text-muted-foreground truncate">
+                <p className="font-medium text-sm truncate">{track.title}</p>
+                <p className="text-xs text-muted-foreground truncate">
                   {track.artist} • {formatDuration(track.duration)}
                 </p>
               </div>
 
-              {/* Add button */}
+              {/* Request button */}
               <Button
                 size="sm"
-                onClick={() => addTrack(track)}
-                disabled={addingIds.has(track.id)}
+                variant="secondary"
+                onClick={() => requestTrack(track)}
+                disabled={requestingIds.has(track.id)}
                 className="shrink-0"
               >
-                {addingIds.has(track.id) ? (
+                {requestingIds.has(track.id) ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
                     <Plus className="h-4 w-4 mr-1" />
-                    Add
+                    Request
                   </>
                 )}
               </Button>
@@ -178,7 +170,7 @@ export function JamendoSearch({ sessionId, onSongAdded }: JamendoSearchProps) {
       {/* Empty state */}
       {!isSearching && results.length === 0 && (
         <p className="text-center text-sm text-muted-foreground py-4">
-          Search for free Creative Commons music to add to your party!
+          Search for your favorite songs to add to the queue!
         </p>
       )}
     </div>

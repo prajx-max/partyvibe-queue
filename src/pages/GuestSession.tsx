@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Disc3, Music } from 'lucide-react';
+import { Disc3, Music, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { NowPlayingCard } from '@/components/NowPlayingCard';
 import { UpNextCard } from '@/components/UpNextCard';
 import { SongCard } from '@/components/SongCard';
 import { SearchBar } from '@/components/SearchBar';
+import { GuestSongRequest } from '@/components/GuestSongRequest';
 import { useSession } from '@/hooks/useSession';
 import { useSongs, SongWithVotes } from '@/hooks/useSongs';
 import { useVoterId } from '@/hooks/useVoterId';
@@ -25,6 +27,7 @@ export default function GuestSession() {
   const [searchQuery, setSearchQuery] = useState('');
   const [votingInProgress, setVotingInProgress] = useState<string | null>(null);
   const [voteTimestamps, setVoteTimestamps] = useState<number[]>([]);
+  const [showRequestPanel, setShowRequestPanel] = useState(false);
 
   const currentSong = songs && songs.length > 0 ? songs[0] : null;
   const upNextSong = songs && songs.length > 1 ? songs[1] : null;
@@ -137,15 +140,35 @@ export default function GuestSession() {
             <Disc3 className="h-6 w-6 text-primary animate-spin" style={{ animationDuration: '3s' }} />
             <span className="font-display font-bold">{session.name}</span>
           </div>
-          {!session.is_voting_open && (
-            <span className="text-xs bg-destructive/20 text-destructive px-2 py-1 rounded-full">
-              Voting Locked
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {!session.is_voting_open && (
+              <span className="text-xs bg-destructive/20 text-destructive px-2 py-1 rounded-full">
+                Voting Locked
+              </span>
+            )}
+            <Button
+              size="sm"
+              variant={showRequestPanel ? 'secondary' : 'default'}
+              onClick={() => setShowRequestPanel(!showRequestPanel)}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Request
+            </Button>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto p-4 space-y-6 relative z-10 max-w-lg">
+        {/* Song Request Panel */}
+        {showRequestPanel && (
+          <GuestSongRequest
+            sessionId={sessionId!}
+            onSongRequested={() => {
+              refetchSongs();
+              setShowRequestPanel(false);
+            }}
+          />
+        )}
         {/* Now Playing */}
         <NowPlayingCard
           song={currentSong}
