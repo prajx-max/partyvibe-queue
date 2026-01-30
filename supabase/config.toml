@@ -1,1 +1,7 @@
 project_id = "byzmcgimalyyergsjfgw"
+
+[functions.jamendo-search]
+verify_jwt = false
+
+[functions.jiosaavn-search]
+verify_jwt = false
