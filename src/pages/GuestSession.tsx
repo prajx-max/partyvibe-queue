@@ -39,7 +39,11 @@ export default function GuestSession() {
   };
 
   const handleVote = async (songId: string) => {
-    if (!voterId || !sessionId || votingInProgress) return;
+    if (!sessionId || votingInProgress) return;
+    if (!voterId) {
+      toast.error('Still connecting... try again in a moment');
+      return;
+    }
 
     // Check if voting is open
     if (!session?.is_voting_open) {
@@ -105,7 +109,7 @@ export default function GuestSession() {
       (song.artist && song.artist.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  if (sessionLoading || voterLoading) {
+  if (sessionLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <Disc3 className="h-12 w-12 animate-spin text-primary" />
