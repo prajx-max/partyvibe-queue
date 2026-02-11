@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Music, ThumbsUp, Trash2 } from 'lucide-react';
+import { Heart, Music, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SongWithVotes } from '@/hooks/useSongs';
 
@@ -18,71 +18,52 @@ export function SongCard({ song, rank, onVote, onRemove, isVoting, isHost, votin
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
-      transition={{ duration: 0.2, delay: rank * 0.05 }}
-      className={`group relative flex items-center gap-4 rounded-xl bg-card p-4 transition-all hover:bg-muted/50 ${
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.15, delay: rank * 0.03 }}
+      className={`group relative flex items-center gap-3 rounded-xl bg-card p-3 transition-all ${
         isTopSong ? 'neon-border' : 'border border-border'
       }`}
     >
-      {/* Rank badge */}
-      <div
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-display font-bold ${
-          rank === 1
-            ? 'bg-primary text-primary-foreground'
-            : rank === 2
-            ? 'bg-secondary text-secondary-foreground'
-            : rank === 3
-            ? 'bg-accent text-accent-foreground'
-            : 'bg-muted text-muted-foreground'
-        }`}
-      >
+      {/* Rank */}
+      <span className={`text-sm font-bold w-5 text-center shrink-0 ${
+        rank <= 3 ? 'text-primary' : 'text-muted-foreground'
+      }`}>
         {rank}
-      </div>
-
-      {/* Song icon */}
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-muted">
-        <Music className="h-5 w-5 text-muted-foreground" />
-      </div>
+      </span>
 
       {/* Song info */}
       <div className="flex-1 min-w-0">
-        <h3 className="font-medium truncate">{song.title}</h3>
-        <p className="text-sm text-muted-foreground truncate">{song.artist || 'Unknown Artist'}</p>
+        <h3 className="text-sm font-medium truncate">{song.title}</h3>
+        <p className="text-xs text-muted-foreground truncate">{song.artist || 'Unknown Artist'}</p>
       </div>
 
-      {/* Vote count */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-muted-foreground">{song.vote_count}</span>
-        
-        {/* Vote button */}
+      {/* Vote tap area */}
+      <button
+        disabled={isVoting || votingLocked}
+        onClick={() => onVote(song.id)}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all active:scale-95 disabled:opacity-50 ${
+          song.user_voted
+            ? 'bg-primary/15 text-primary'
+            : 'bg-muted text-muted-foreground hover:text-primary'
+        }`}
+      >
+        <Heart className={`h-4 w-4 transition-all ${song.user_voted ? 'fill-current scale-110' : ''}`} />
+        <span className="text-sm font-semibold min-w-[1ch]">{song.vote_count}</span>
+      </button>
+
+      {/* Remove button (host only) */}
+      {isHost && onRemove && (
         <Button
-          variant={song.user_voted ? 'default' : 'outline'}
-          size="sm"
-          disabled={isVoting || votingLocked}
-          onClick={() => onVote(song.id)}
-          className={`transition-all ${
-            song.user_voted
-              ? 'bg-primary text-primary-foreground hover:bg-primary/90 glow-cyan'
-              : 'hover:border-primary hover:text-primary'
-          }`}
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+          onClick={() => onRemove(song.id)}
         >
-          <ThumbsUp className={`h-4 w-4 ${song.user_voted ? 'fill-current' : ''}`} />
+          <Trash2 className="h-3.5 w-3.5" />
         </Button>
-
-        {/* Remove button (host only) */}
-        {isHost && onRemove && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onRemove(song.id)}
-            className="text-muted-foreground hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
+      )}
     </motion.div>
   );
 }
