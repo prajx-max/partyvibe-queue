@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Disc3, Settings, Lock, Unlock, RotateCcw, ArrowLeft } from 'lucide-react';
+import { PartyBackground } from '@/components/PartyBackground';
+import { Equalizer } from '@/components/Equalizer';
 import { Button } from '@/components/ui/button';
 import { NowPlayingCard } from '@/components/NowPlayingCard';
 import { UpNextCard } from '@/components/UpNextCard';
@@ -149,9 +151,10 @@ export default function HostDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen party-gradient-bg">
+      <PartyBackground />
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
+      <header className="sticky top-0 z-50 border-b border-border/50 glass-heavy">
         <div className="container mx-auto flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate('/')}>

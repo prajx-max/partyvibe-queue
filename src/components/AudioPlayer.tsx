@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { Volume2, VolumeX, SkipForward, SkipBack, Gauge } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,6 @@ export function AudioPlayer({ currentSong, onSongEnd, onProgressChange, isPlayin
   const [volume, setVolume] = useState(80);
   const [isMuted, setIsMuted] = useState(false);
   const [speed, setSpeed] = useState(1);
-  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -85,11 +85,14 @@ export function AudioPlayer({ currentSong, onSongEnd, onProgressChange, isPlayin
 
   const handleSpeedChange = (newSpeed: number) => {
     setSpeed(newSpeed);
-    setShowSpeedMenu(false);
   };
 
   return (
-    <div className="rounded-xl bg-card border border-border p-4 space-y-3">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-xl glass-heavy border border-border/50 p-4 space-y-3"
+    >
       <audio
         ref={audioRef}
         onTimeUpdate={handleTimeUpdate}
@@ -103,7 +106,7 @@ export function AudioPlayer({ currentSong, onSongEnd, onProgressChange, isPlayin
           variant="ghost"
           size="icon"
           onClick={() => setIsMuted(!isMuted)}
-          className="shrink-0 h-8 w-8"
+          className="shrink-0 h-8 w-8 text-muted-foreground hover:text-primary"
         >
           {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
         </Button>
@@ -124,52 +127,45 @@ export function AudioPlayer({ currentSong, onSongEnd, onProgressChange, isPlayin
 
         <div className="flex-1" />
 
-        {/* Skip back 10s */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => handleSkip10('back')}
-          disabled={!currentSong}
-          className="h-8 w-8 shrink-0"
-          title="Skip back 10s"
-        >
-          <SkipBack className="h-4 w-4" />
-          <span className="sr-only">-10s</span>
-        </Button>
-
-        {/* -10 / +10 labels */}
+        {/* Skip 10s buttons */}
         <div className="flex items-center gap-1">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleSkip10('back')}
-            disabled={!currentSong}
-            className="h-7 px-2 text-xs"
-          >
-            -10s
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleSkip10('forward')}
-            disabled={!currentSong}
-            className="h-7 px-2 text-xs"
-          >
-            +10s
-          </Button>
+          <motion.div whileTap={{ scale: 0.9 }}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleSkip10('back')}
+              disabled={!currentSong}
+              className="h-7 px-2 text-xs border-border/50 hover:border-primary/50 hover:text-primary"
+            >
+              -10s
+            </Button>
+          </motion.div>
+          <motion.div whileTap={{ scale: 0.9 }}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleSkip10('forward')}
+              disabled={!currentSong}
+              className="h-7 px-2 text-xs border-border/50 hover:border-primary/50 hover:text-primary"
+            >
+              +10s
+            </Button>
+          </motion.div>
         </div>
 
         {/* Skip to next song */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleSkip}
-          disabled={!currentSong}
-          className="gap-1.5 h-8"
-        >
-          <SkipForward className="h-4 w-4" />
-          Skip
-        </Button>
+        <motion.div whileTap={{ scale: 0.9 }}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSkip}
+            disabled={!currentSong}
+            className="gap-1.5 h-8 border-accent/30 text-accent hover:bg-accent/10 hover:border-accent/50"
+          >
+            <SkipForward className="h-4 w-4" />
+            Skip
+          </Button>
+        </motion.div>
       </div>
 
       {/* Row 2: Speed control */}
@@ -178,20 +174,21 @@ export function AudioPlayer({ currentSong, onSongEnd, onProgressChange, isPlayin
         <span className="text-xs text-muted-foreground shrink-0">Speed:</span>
         <div className="flex items-center gap-1 flex-wrap">
           {SPEED_OPTIONS.map((s) => (
-            <button
+            <motion.button
               key={s}
               onClick={() => handleSpeedChange(s)}
-              className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+              whileTap={{ scale: 0.9 }}
+              className={`px-2 py-0.5 rounded text-xs font-medium transition-all ${
                 speed === s
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground glow-cyan'
+                  : 'bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
             >
               {s}×
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

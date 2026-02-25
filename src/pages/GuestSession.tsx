@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Disc3, Music } from 'lucide-react';
+import { PartyBackground } from '@/components/PartyBackground';
 import { NowPlayingCard } from '@/components/NowPlayingCard';
 import { UpNextCard } from '@/components/UpNextCard';
 import { SongCard } from '@/components/SongCard';
@@ -128,15 +129,11 @@ export default function GuestSession() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Animated background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -left-1/4 top-0 h-[400px] w-[400px] rounded-full bg-primary/5 blur-[100px]" />
-        <div className="absolute -right-1/4 bottom-0 h-[400px] w-[400px] rounded-full bg-accent/5 blur-[100px]" />
-      </div>
+    <div className="min-h-screen party-gradient-bg">
+      <PartyBackground />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
+      <header className="sticky top-0 z-50 border-b border-border/50 glass-heavy">
         <div className="container mx-auto flex items-center justify-between p-4">
           <div className="flex items-center gap-2">
             <Disc3 className="h-6 w-6 text-primary animate-spin" style={{ animationDuration: '3s' }} />
