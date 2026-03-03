@@ -1,0 +1,1485 @@
+
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PartyVote DJ</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cyan: #00e5ff;
+    --magenta: #e040fb;
+    --purple: #7c3aed;
+    --bg: #050810;
+    --card: rgba(255,255,255,0.04);
+    --card-border: rgba(255,255,255,0.08);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+    cursor: default;
+  }
+
+  /* ── CANVAS LAYERS ── */
+  #aurora-canvas, #laser-canvas, #particle-canvas, #spotlight-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  #laser-canvas { z-index: 1; mix-blend-mode: screen; }
+  #particle-canvas { z-index: 2; mix-blend-mode: screen; }
+  #spotlight-canvas { z-index: 3; mix-blend-mode: screen; }
+
+  .grid-overlay {
+    position: fixed; inset: 0; z-index: 4; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    animation: grid-pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes grid-pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  .grain {
+    position: fixed; inset: -50%; width: 200%; height: 200%;
+    z-index: 5; pointer-events: none; opacity: 0.02;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    animation: grain-shift 0.5s steps(1) infinite;
+  }
+
+  @keyframes grain-shift {
+    0%   { transform: translate(0, 0); }
+    25%  { transform: translate(-2%, -3%); }
+    50%  { transform: translate(3%, 1%); }
+    75%  { transform: translate(-1%, 4%); }
+    100% { transform: translate(2%, -2%); }
+  }
+
+  /* ── FOG OVERLAY ── */
+  .fog {
+    position: fixed; inset: 0; z-index: 4; pointer-events: none;
+    background:
+      radial-gradient(ellipse 120% 40% at 50% 100%, rgba(0,229,255,0.03), transparent),
+      radial-gradient(ellipse 100% 50% at 20% 80%, rgba(224,64,251,0.02), transparent),
+      radial-gradient(ellipse 100% 50% at 80% 80%, rgba(124,58,237,0.02), transparent);
+    animation: fog-drift 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes fog-drift {
+    0% { transform: translateX(-20px) scale(1); opacity: 0.6; }
+    100% { transform: translateX(20px) scale(1.05); opacity: 1; }
+  }
+
+  /* ── STROBE FLASH ── */
+  .strobe {
+    position: fixed; inset: 0; z-index: 6; pointer-events: none;
+    background: white; opacity: 0;
+    animation: strobe-flash 8s ease infinite;
+  }
+
+  @keyframes strobe-flash {
+    0%, 96%, 100% { opacity: 0; }
+    97% { opacity: 0.03; }
+    97.5% { opacity: 0; }
+    98% { opacity: 0.02; }
+    98.5% { opacity: 0; }
+  }
+
+  /* ── EDGE GLOWS ── */
+  .edge-glow-left, .edge-glow-right, .edge-glow-top {
+    position: fixed; z-index: 4; pointer-events: none;
+  }
+
+  .edge-glow-left {
+    left: 0; top: 0; bottom: 0; width: 300px;
+    background: linear-gradient(90deg, rgba(0,229,255,0.04), transparent);
+    animation: edge-pulse-l 3s ease-in-out infinite;
+  }
+
+  .edge-glow-right {
+    right: 0; top: 0; bottom: 0; width: 300px;
+    background: linear-gradient(-90deg, rgba(224,64,251,0.04), transparent);
+    animation: edge-pulse-r 3.5s ease-in-out infinite;
+  }
+
+  .edge-glow-top {
+    top: 0; left: 0; right: 0; height: 200px;
+    background: linear-gradient(180deg, rgba(124,58,237,0.03), transparent);
+    animation: edge-pulse-t 4s ease-in-out infinite;
+  }
+
+  @keyframes edge-pulse-l {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+  @keyframes edge-pulse-r {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+  @keyframes edge-pulse-t {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  /* ── CURSOR GLOW ── */
+  .cursor-glow {
+    position: fixed;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,229,255,0.08) 0%, rgba(224,64,251,0.03) 40%, transparent 70%);
+    pointer-events: none; z-index: 7;
+    transform: translate(-50%, -50%);
+    transition: left 0.08s ease, top 0.08s ease;
+    mix-blend-mode: screen;
+  }
+
+  /* ── CURSOR TRAIL ── */
+  .trail-dot {
+    position: fixed;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 7;
+    mix-blend-mode: screen;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.3s ease;
+  }
+
+  /* ── LAYOUT ── */
+  .page {
+    position: relative; z-index: 10;
+    max-width: 1200px; margin: 0 auto; padding: 0 28px;
+  }
+
+  /* ── NAVBAR ── */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    animation: fade-down 0.6s ease both;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 17px;
+    color: var(--text); letter-spacing: -0.3px;
+  }
+
+  .logo-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, rgba(0,229,255,0.2), rgba(0,229,255,0.05));
+    border: 1px solid rgba(0,229,255,0.3);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 16px rgba(0,229,255,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
+    animation: logo-breathe 3s ease-in-out infinite;
+  }
+
+  @keyframes logo-breathe {
+    0%, 100% { box-shadow: 0 0 16px rgba(0,229,255,0.15), inset 0 1px 0 rgba(255,255,255,0.1); }
+    50% { box-shadow: 0 0 28px rgba(0,229,255,0.35), 0 0 60px rgba(0,229,255,0.1), inset 0 1px 0 rgba(255,255,255,0.1); }
+  }
+
+  .logo-icon svg { width: 18px; height: 18px; }
+
+  .waveform {
+    display: flex; align-items: center; gap: 3px; padding: 0 2px;
+  }
+
+  .waveform span {
+    display: block; width: 3px; border-radius: 2px;
+    background: var(--cyan);
+    animation: wave-bar 0.8s ease-in-out infinite;
+  }
+
+  .waveform span:nth-child(1) { height: 10px; animation-delay: 0s; }
+  .waveform span:nth-child(2) { height: 16px; animation-delay: 0.1s; }
+  .waveform span:nth-child(3) { height: 12px; animation-delay: 0.2s; }
+  .waveform span:nth-child(4) { height: 18px; animation-delay: 0.07s; }
+  .waveform span:nth-child(5) { height: 8px; animation-delay: 0.17s; }
+
+  @keyframes wave-bar {
+    0%, 100% { transform: scaleY(1); opacity: 0.6; }
+    50% { transform: scaleY(1.8); opacity: 1; }
+  }
+
+  .sign-out {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; padding: 8px 18px;
+    color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 14px;
+    cursor: pointer; transition: all 0.25s ease;
+  }
+
+  .sign-out:hover {
+    border-color: rgba(255,255,255,0.25);
+    color: var(--text); background: rgba(255,255,255,0.05);
+    box-shadow: 0 0 20px rgba(255,255,255,0.05);
+  }
+
+  /* ── HERO ── */
+  .hero { text-align: center; padding: 80px 0 60px; }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: clamp(60px, 10vw, 96px); line-height: 1;
+    letter-spacing: -3px; margin-bottom: 28px;
+    animation: fade-up 0.8s 0.1s ease both;
+  }
+
+  .hero h1 .word-vote {
+    background: linear-gradient(135deg, var(--cyan) 0%, #7b9fff 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 40px rgba(0,229,255,0.4));
+    animation: text-glow-cyan 3s ease-in-out infinite;
+  }
+
+  .hero h1 .word-play {
+    background: linear-gradient(135deg, #c084fc 0%, var(--magenta) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 40px rgba(224,64,251,0.4));
+    animation: text-glow-magenta 3s ease-in-out infinite 0.5s;
+  }
+
+  .hero h1 .word-party {
+    background: linear-gradient(135deg, var(--cyan) 0%, #60a5fa 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 40px rgba(0,229,255,0.35));
+    animation: text-glow-cyan 3s ease-in-out infinite 1s;
+  }
+
+  @keyframes text-glow-cyan {
+    0%, 100% { filter: drop-shadow(0 0 30px rgba(0,229,255,0.3)); }
+    50% { filter: drop-shadow(0 0 60px rgba(0,229,255,0.6)) drop-shadow(0 0 100px rgba(0,229,255,0.2)); }
+  }
+
+  @keyframes text-glow-magenta {
+    0%, 100% { filter: drop-shadow(0 0 30px rgba(224,64,251,0.3)); }
+    50% { filter: drop-shadow(0 0 60px rgba(224,64,251,0.6)) drop-shadow(0 0 100px rgba(224,64,251,0.2)); }
+  }
+
+  .hero h1 .dot { color: rgba(255,255,255,0.15); -webkit-text-fill-color: rgba(255,255,255,0.15); }
+
+  .hero p {
+    font-size: 17px; color: #8b95a8; max-width: 520px;
+    margin: 0 auto; line-height: 1.7; font-weight: 400;
+    animation: fade-up 0.8s 0.2s ease both;
+  }
+
+  /* ── BEAT INDICATOR ── */
+  .beat-ring {
+    position: fixed;
+    top: 50%; left: 50%;
+    width: 0; height: 0;
+    border-radius: 50%;
+    border: 1px solid rgba(0,229,255,0.15);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 4;
+    opacity: 0;
+  }
+
+  /* ── FEATURE CARDS ── */
+  .features {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 16px; margin-bottom: 24px;
+    animation: fade-up 0.8s 0.3s ease both;
+  }
+
+  .feat-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 18px; padding: 28px 24px;
+    text-align: center; position: relative; overflow: hidden;
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), border-color 0.35s ease, box-shadow 0.35s ease;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+
+  .feat-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255,255,255,0.05), transparent);
+    pointer-events: none;
+  }
+
+  .feat-card::after {
+    content: ''; position: absolute;
+    top: -1px; left: 20%; right: 20%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    border-radius: 50%;
+  }
+
+  /* Reactive shimmer on cards */
+  .feat-card .shimmer {
+    position: absolute; inset: 0;
+    background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.03) 45%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 55%, transparent 60%);
+    transform: translateX(-100%);
+    transition: none; pointer-events: none;
+  }
+
+  .feat-card:hover .shimmer {
+    animation: shimmer-pass 0.8s ease forwards;
+  }
+
+  @keyframes shimmer-pass {
+    to { transform: translateX(100%); }
+  }
+
+  .feat-card:hover {
+    transform: translateY(-6px) scale(1.01);
+    border-color: rgba(255,255,255,0.15);
+    box-shadow: 0 24px 48px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.06);
+  }
+
+  .feat-card:nth-child(1):hover {
+    box-shadow: 0 24px 48px rgba(0,229,255,0.1), 0 0 0 1px rgba(0,229,255,0.2), 0 0 80px rgba(0,229,255,0.05);
+  }
+  .feat-card:nth-child(2):hover {
+    box-shadow: 0 24px 48px rgba(224,64,251,0.1), 0 0 0 1px rgba(224,64,251,0.2), 0 0 80px rgba(224,64,251,0.05);
+  }
+  .feat-card:nth-child(3):hover {
+    box-shadow: 0 24px 48px rgba(124,58,237,0.12), 0 0 0 1px rgba(124,58,237,0.25), 0 0 80px rgba(124,58,237,0.06);
+  }
+
+  .feat-icon {
+    width: 60px; height: 60px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 18px; font-size: 22px;
+    position: relative; transition: transform 0.3s ease;
+  }
+
+  .feat-card:hover .feat-icon { transform: scale(1.15) rotate(-5deg); }
+
+  .feat-icon-cyan {
+    background: linear-gradient(135deg, rgba(0,229,255,0.2), rgba(0,229,255,0.05));
+    border: 1px solid rgba(0,229,255,0.25);
+    box-shadow: 0 8px 24px rgba(0,229,255,0.12), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+
+  .feat-icon-magenta {
+    background: linear-gradient(135deg, rgba(224,64,251,0.25), rgba(224,64,251,0.05));
+    border: 1px solid rgba(224,64,251,0.3);
+    box-shadow: 0 8px 24px rgba(224,64,251,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+
+  .feat-icon-purple {
+    background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(124,58,237,0.08));
+    border: 1px solid rgba(124,58,237,0.35);
+    box-shadow: 0 8px 24px rgba(124,58,237,0.18), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+
+  .feat-card h3 {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px;
+    color: var(--text); margin-bottom: 6px; letter-spacing: -0.2px;
+  }
+
+  .feat-card p { font-size: 13px; color: #606880; line-height: 1.5; }
+
+  /* ── ACTION PANELS ── */
+  .actions {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px; margin-bottom: 120px;
+    animation: fade-up 0.8s 0.4s ease both;
+  }
+
+  .action-panel {
+    background: rgba(255,255,255,0.035);
+    border: 1px solid var(--card-border);
+    border-radius: 22px; padding: 32px;
+    position: relative; overflow: hidden;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .action-panel::before {
+    content: ''; position: absolute; inset: 0; border-radius: 22px;
+    background: radial-gradient(ellipse 100% 80% at 50% -20%, rgba(255,255,255,0.04), transparent 70%);
+    pointer-events: none;
+  }
+
+  .action-panel.host { border-color: rgba(0,229,255,0.12); }
+  .action-panel.join { border-color: rgba(224,64,251,0.12); }
+
+  .action-panel.host:hover {
+    border-color: rgba(0,229,255,0.3);
+    box-shadow: 0 0 80px rgba(0,229,255,0.08), 0 20px 40px rgba(0,0,0,0.2), inset 0 0 60px rgba(0,229,255,0.02);
+  }
+
+  .action-panel.join:hover {
+    border-color: rgba(224,64,251,0.3);
+    box-shadow: 0 0 80px rgba(224,64,251,0.08), 0 20px 40px rgba(0,0,0,0.2), inset 0 0 60px rgba(224,64,251,0.02);
+  }
+
+  .action-panel.host::after {
+    content: ''; position: absolute;
+    top: -80px; left: -80px; width: 250px; height: 250px;
+    background: radial-gradient(circle, rgba(0,229,255,0.1), transparent 70%);
+    pointer-events: none; border-radius: 50%;
+    animation: orb-float 6s ease-in-out infinite;
+  }
+
+  .action-panel.join::after {
+    content: ''; position: absolute;
+    top: -80px; right: -80px; width: 250px; height: 250px;
+    background: radial-gradient(circle, rgba(224,64,251,0.1), transparent 70%);
+    pointer-events: none; border-radius: 50%;
+    animation: orb-float 7s ease-in-out infinite 1s;
+  }
+
+  @keyframes orb-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(15px, 10px) scale(1.1); }
+    66% { transform: translate(-10px, 5px) scale(0.95); }
+  }
+
+  .panel-title {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+  }
+
+  .panel-title .icon { font-size: 20px; }
+
+  .panel-title h2 {
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px;
+    color: var(--text); letter-spacing: -0.5px;
+  }
+
+  .logged-in {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
+    padding: 10px 14px;
+    background: rgba(0,229,255,0.05);
+    border: 1px solid rgba(0,229,255,0.12);
+    border-radius: 10px;
+  }
+
+  .avatar-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan), 0 0 20px var(--cyan);
+    flex-shrink: 0;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 8px var(--cyan), 0 0 20px var(--cyan); }
+    50% { opacity: 0.6; transform: scale(0.85); box-shadow: 0 0 4px var(--cyan); }
+  }
+
+  .logged-in span { font-size: 13px; color: #7dd3e0; font-weight: 500; }
+
+  .input-label {
+    display: block; font-size: 13px; font-weight: 600;
+    color: #8b95a8; margin-bottom: 8px; letter-spacing: 0.2px;
+  }
+
+  .input-field {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 12px; padding: 13px 16px;
+    color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 15px; outline: none; margin-bottom: 16px;
+    transition: all 0.25s ease;
+  }
+
+  .input-field::placeholder { color: #3d4555; }
+
+  .input-field:focus {
+    border-color: rgba(0,229,255,0.4);
+    background: rgba(0,229,255,0.05);
+    box-shadow: 0 0 0 3px rgba(0,229,255,0.1), 0 0 30px rgba(0,229,255,0.08);
+  }
+
+  .action-panel.join .input-field:focus {
+    border-color: rgba(224,64,251,0.4);
+    background: rgba(224,64,251,0.04);
+    box-shadow: 0 0 0 3px rgba(224,64,251,0.1), 0 0 30px rgba(224,64,251,0.08);
+  }
+
+  .btn {
+    width: 100%; padding: 14px 20px;
+    border: none; border-radius: 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    position: relative; overflow: hidden;
+    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, filter 0.25s ease;
+    letter-spacing: -0.1px;
+  }
+
+  .btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  /* Sweep shine on button */
+  .btn::after {
+    content: ''; position: absolute;
+    top: 0; left: -100%; width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: none; pointer-events: none;
+  }
+
+  .btn:hover::after {
+    animation: btn-shine 0.6s ease forwards;
+  }
+
+  @keyframes btn-shine {
+    to { left: 150%; }
+  }
+
+  .btn-cyan {
+    background: linear-gradient(135deg, #00d4f0 0%, #00b8d9 100%);
+    color: #001a1f;
+    box-shadow: 0 4px 20px rgba(0,229,255,0.25), 0 1px 0 rgba(255,255,255,0.2) inset;
+  }
+
+  .btn-cyan:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 8px 40px rgba(0,229,255,0.5), 0 0 80px rgba(0,229,255,0.15), 0 1px 0 rgba(255,255,255,0.2) inset;
+    filter: brightness(1.08);
+  }
+
+  .btn-cyan:active { transform: scale(0.97); }
+
+  .btn-purple {
+    background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+    color: white;
+    box-shadow: 0 4px 20px rgba(124,58,237,0.3), 0 1px 0 rgba(255,255,255,0.15) inset;
+  }
+
+  .btn-purple:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 8px 40px rgba(124,58,237,0.5), 0 0 80px rgba(124,58,237,0.15), 0 1px 0 rgba(255,255,255,0.15) inset;
+    filter: brightness(1.1);
+  }
+
+  .btn-purple:active { transform: scale(0.97); }
+
+  .btn .arrow { transition: transform 0.2s ease; }
+  .btn:hover .arrow { transform: translateX(4px); }
+
+  .join-info {
+    font-size: 14px; color: #606880;
+    line-height: 1.6; margin-bottom: 20px;
+  }
+
+  /* ── VISUALIZER BAR ── */
+  #visualizer-canvas {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 100px;
+    z-index: 8;
+    pointer-events: none;
+  }
+
+  /* ── DISCO BALL ── */
+  .disco-ball {
+    position: fixed;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 6;
+    pointer-events: none;
+  }
+
+  .disco-ball-body {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #eee, #888 40%, #555 80%);
+    border: 1px solid rgba(255,255,255,0.3);
+    box-shadow: 0 0 20px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.4);
+    position: relative;
+    animation: disco-spin 12s linear infinite;
+  }
+
+  .disco-ball-string {
+    width: 1px; height: 14px;
+    background: rgba(255,255,255,0.15);
+    margin: 0 auto -2px;
+  }
+
+  @keyframes disco-spin {
+    to { transform: rotateY(360deg); }
+  }
+
+  /* ── FLOATING EMOJI PARTICLES ── */
+  .float-emoji {
+    position: fixed;
+    z-index: 6;
+    pointer-events: none;
+    font-size: 18px;
+    opacity: 0;
+    animation: float-up 6s ease-in-out forwards;
+  }
+
+  @keyframes float-up {
+    0% { opacity: 0; transform: translateY(0) scale(0.5) rotate(0deg); }
+    10% { opacity: 0.7; }
+    80% { opacity: 0.3; }
+    100% { opacity: 0; transform: translateY(-400px) scale(1) rotate(180deg); }
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fade-down {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── REACTIVE BEAT PULSE ON EVERYTHING ── */
+  .beat-active nav { border-bottom-color: rgba(0,229,255,0.2); }
+  .beat-active .logo-icon {
+    box-shadow: 0 0 30px rgba(0,229,255,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .beat-active .waveform span { animation-duration: 0.4s; }
+  .beat-active .hero h1 { transform: scale(1.005); }
+  .beat-active .grid-overlay { opacity: 1; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .features { grid-template-columns: 1fr; }
+    .actions { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 52px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CANVAS LAYERS -->
+<canvas id="aurora-canvas"></canvas>
+<canvas id="laser-canvas"></canvas>
+<canvas id="particle-canvas"></canvas>
+<canvas id="spotlight-canvas"></canvas>
+<canvas id="visualizer-canvas"></canvas>
+
+<div class="grid-overlay"></div>
+<div class="grain"></div>
+<div class="fog"></div>
+<div class="strobe"></div>
+<div class="edge-glow-left"></div>
+<div class="edge-glow-right"></div>
+<div class="edge-glow-top"></div>
+<div class="cursor-glow" id="cursor-glow"></div>
+
+<!-- DISCO BALL -->
+<div class="disco-ball">
+  <div class="disco-ball-string"></div>
+  <div class="disco-ball-body"></div>
+</div>
+
+<div class="page">
+  <nav>
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="#00e5ff" stroke-width="1.5"/>
+          <circle cx="12" cy="12" r="4" stroke="#00e5ff" stroke-width="1.5"/>
+          <circle cx="12" cy="12" r="1.5" fill="#00e5ff"/>
+        </svg>
+      </div>
+      PartyVote DJ
+      <div class="waveform">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+    <button class="sign-out">Sign Out</button>
+  </nav>
+
+  <section class="hero">
+    <h1>
+      <span class="word-vote">Vote</span><span class="dot">.</span>&nbsp;
+      <span class="word-play">Play</span><span class="dot">.</span>&nbsp;
+      <span class="word-party">Party</span><span class="dot">.</span>
+    </h1>
+    <p>Let your guests choose the music. Create a session, share the QR code, and watch the votes roll in while the top songs play automatically.</p>
+  </section>
+
+  <div class="features">
+    <div class="feat-card">
+      <div class="shimmer"></div>
+      <div class="feat-icon feat-icon-cyan">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="#00e5ff"/>
+        </svg>
+      </div>
+      <h3>Crowd-Powered</h3>
+      <p>Guests vote on their phones</p>
+    </div>
+
+    <div class="feat-card">
+      <div class="shimmer"></div>
+      <div class="feat-icon feat-icon-magenta">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M7 2v11h3v9l7-12h-4l4-8z" fill="#e040fb"/>
+        </svg>
+      </div>
+      <h3>Real-Time Queue</h3>
+      <p>Top voted songs play next</p>
+    </div>
+
+    <div class="feat-card">
+      <div class="shimmer"></div>
+      <div class="feat-icon feat-icon-purple">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path d="M12 4C7.31 4 3.42 7.29 2.27 11.64L4.23 12c.93-3.46 4.1-6 7.77-6s6.84 2.54 7.77 6l1.96-.36C20.58 7.29 16.69 4 12 4zm0 4c-2.76 0-5.1 1.72-6.1 4.17L7.83 13c.73-1.74 2.45-3 4.17-3s3.44 1.26 4.17 3l1.93-.83C17.1 9.72 14.76 8 12 8zm0 4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" fill="#a78bfa"/>
+        </svg>
+      </div>
+      <h3>Easy Hosting</h3>
+      <p>Connect and hit play</p>
+    </div>
+  </div>
+
+  <div class="actions">
+    <div class="action-panel host">
+      <div class="panel-title">
+        <span class="icon">✦</span>
+        <h2>Host a Party</h2>
+      </div>
+      <div class="logged-in">
+        <div class="avatar-dot"></div>
+        <span>Logged in as ppraju807@gmail.com</span>
+      </div>
+      <label class="input-label">Session Name</label>
+      <input type="text" class="input-field" placeholder="My Awesome Party 🎉">
+      <button class="btn btn-cyan" id="btn-host">
+        Create Session
+        <span class="arrow">→</span>
+      </button>
+    </div>
+
+    <div class="action-panel join">
+      <div class="panel-title">
+        <span class="icon" style="color:#e040fb">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="vertical-align:middle">
+            <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="#e040fb"/>
+          </svg>
+        </span>
+        <h2>Join a Party</h2>
+      </div>
+      <p class="join-info">Got a session code or QR link? Enter it below to start voting on songs!</p>
+      <label class="input-label">Session Code or Link</label>
+      <input type="text" class="input-field" placeholder="Paste session link or ID">
+      <button class="btn btn-purple" id="btn-join">
+        Join Session
+        <span class="arrow">→</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════
+// SHARED STATE
+// ═══════════════════════════════════
+const W = () => window.innerWidth;
+const H = () => window.innerHeight;
+let mouseX = W() / 2, mouseY = H() / 2;
+let smoothMouseX = 0.5, smoothMouseY = 0.5;
+let beatPhase = 0;
+let isBeat = false;
+const BPM = 128;
+const beatInterval = 60000 / BPM;
+
+// ═══════════════════════════════════
+// MOUSE TRACKING
+// ═══════════════════════════════════
+const trailDots = [];
+const TRAIL_COUNT = 12;
+
+for (let i = 0; i < TRAIL_COUNT; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'trail-dot';
+  const hue = (i / TRAIL_COUNT) * 60 + 170;
+  dot.style.background = `hsl(${hue}, 100%, 70%)`;
+  dot.style.width = (6 - i * 0.4) + 'px';
+  dot.style.height = (6 - i * 0.4) + 'px';
+  dot.style.boxShadow = `0 0 ${8 - i}px hsl(${hue}, 100%, 60%)`;
+  document.body.appendChild(dot);
+  trailDots.push({ el: dot, x: W() / 2, y: H() / 2 });
+}
+
+window.addEventListener('mousemove', e => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+  const g = document.getElementById('cursor-glow');
+  g.style.left = e.clientX + 'px';
+  g.style.top = e.clientY + 'px';
+});
+
+function updateTrail() {
+  let prevX = mouseX, prevY = mouseY;
+  trailDots.forEach((dot, i) => {
+    const ease = 0.25 - i * 0.015;
+    dot.x += (prevX - dot.x) * ease;
+    dot.y += (prevY - dot.y) * ease;
+    dot.el.style.left = dot.x + 'px';
+    dot.el.style.top = dot.y + 'px';
+    dot.el.style.opacity = 1 - (i / TRAIL_COUNT) * 0.8;
+    prevX = dot.x;
+    prevY = dot.y;
+  });
+}
+
+// ═══════════════════════════════════
+// BEAT SIMULATION
+// ═══════════════════════════════════
+let lastBeatTime = 0;
+
+function checkBeat(time) {
+  if (time - lastBeatTime > beatInterval) {
+    lastBeatTime = time;
+    isBeat = true;
+    document.body.classList.add('beat-active');
+
+    // Spawn beat ring
+    spawnBeatRing();
+
+    setTimeout(() => {
+      document.body.classList.remove('beat-active');
+      isBeat = false;
+    }, 100);
+  }
+}
+
+function spawnBeatRing() {
+  const ring = document.createElement('div');
+  ring.className = 'beat-ring';
+  document.body.appendChild(ring);
+  let size = 0;
+  let opacity = 0.3;
+  const colors = ['0,229,255', '224,64,251', '124,58,237', '255,100,100'];
+  const color = colors[Math.floor(Math.random() * colors.length)];
+
+  function expand() {
+    size += 8;
+    opacity -= 0.004;
+    ring.style.width = size + 'px';
+    ring.style.height = size + 'px';
+    ring.style.opacity = Math.max(0, opacity);
+    ring.style.borderColor = `rgba(${color},${Math.max(0, opacity)})`;
+    if (opacity > 0) {
+      requestAnimationFrame(expand);
+    } else {
+      ring.remove();
+    }
+  }
+  requestAnimationFrame(expand);
+}
+
+// ═══════════════════════════════════
+// AURORA CANVAS
+// ═══════════════════════════════════
+const auroraCanvas = document.getElementById('aurora-canvas');
+const auroraCtx = auroraCanvas.getContext('2d');
+
+function resizeCanvas(c) {
+  c.width = W();
+  c.height = H();
+}
+
+const allCanvases = [
+  auroraCanvas,
+  document.getElementById('laser-canvas'),
+  document.getElementById('particle-canvas'),
+  document.getElementById('spotlight-canvas'),
+  document.getElementById('visualizer-canvas')
+];
+
+function resizeAll() {
+  allCanvases.forEach(c => { c.width = W(); c.height = H(); });
+  document.getElementById('visualizer-canvas').height = 100;
+}
+resizeAll();
+window.addEventListener('resize', resizeAll);
+
+const orbs = [
+  { x: 0.2, y: 0.3, r: 0.45, color: [0, 200, 255], phase: 0, speed: 0.0008 },
+  { x: 0.8, y: 0.7, r: 0.4, color: [200, 50, 255], phase: 1.5, speed: 0.0012 },
+  { x: 0.5, y: 0.5, r: 0.35, color: [100, 80, 255], phase: 3, speed: 0.0007 },
+  { x: 0.1, y: 0.8, r: 0.3, color: [0, 255, 200], phase: 0.8, speed: 0.001 },
+  { x: 0.9, y: 0.2, r: 0.35, color: [180, 0, 255], phase: 2.2, speed: 0.0009 },
+  { x: 0.6, y: 0.1, r: 0.25, color: [255, 50, 100], phase: 4.0, speed: 0.0011 },
+  { x: 0.3, y: 0.9, r: 0.3, color: [50, 255, 150], phase: 1.0, speed: 0.0006 },
+];
+
+function drawAurora(time) {
+  const w = auroraCanvas.width, h = auroraCanvas.height;
+  auroraCtx.clearRect(0, 0, w, h);
+  auroraCtx.fillStyle = '#050810';
+  auroraCtx.fillRect(0, 0, w, h);
+
+  smoothMouseX += (mouseX / w - smoothMouseX) * 0.04;
+  smoothMouseY += (mouseY / h - smoothMouseY) * 0.04;
+
+  const beatBoost = isBeat ? 1.5 : 1;
+
+  orbs.forEach((orb, i) => {
+    const t = time * 0.001 * orb.speed * 500 + orb.phase;
+    const mx = smoothMouseX * 0.2 * (i % 2 === 0 ? 1 : -1);
+    const my = smoothMouseY * 0.15 * (i % 3 === 0 ? 1 : -1);
+    const ox = (orb.x + Math.sin(t) * 0.15 + mx) * w;
+    const oy = (orb.y + Math.cos(t * 0.7) * 0.12 + my) * h;
+    const r = orb.r * Math.min(w, h) * beatBoost;
+
+    const grad = auroraCtx.createRadialGradient(ox, oy, 0, ox, oy, r);
+    const alpha = (0.07 + Math.sin(t * 3) * 0.02) * beatBoost;
+    grad.addColorStop(0, `rgba(${orb.color[0]},${orb.color[1]},${orb.color[2]},${alpha})`);
+    grad.addColorStop(0.4, `rgba(${orb.color[0]},${orb.color[1]},${orb.color[2]},${alpha * 0.35})`);
+    grad.addColorStop(1, `rgba(${orb.color[0]},${orb.color[1]},${orb.color[2]},0)`);
+
+    auroraCtx.fillStyle = grad;
+    auroraCtx.beginPath();
+    auroraCtx.arc(ox, oy, r, 0, Math.PI * 2);
+    auroraCtx.fill();
+  });
+
+  // Mouse reactive pulse
+  const pulse = auroraCtx.createRadialGradient(smoothMouseX * w, smoothMouseY * h, 0, smoothMouseX * w, smoothMouseY * h, 350);
+  pulse.addColorStop(0, 'rgba(0,229,255,0.05)');
+  pulse.addColorStop(0.5, 'rgba(224,64,251,0.015)');
+  pulse.addColorStop(1, 'transparent');
+  auroraCtx.fillStyle = pulse;
+  auroraCtx.fillRect(0, 0, w, h);
+}
+
+// ═══════════════════════════════════
+// LASER BEAMS
+// ═══════════════════════════════════
+const laserCanvas = document.getElementById('laser-canvas');
+const laserCtx = laserCanvas.getContext('2d');
+
+class LaserBeam {
+  constructor() {
+    this.reset();
+  }
+
+  reset() {
+    this.originX = Math.random();
+    this.originY = -0.05;
+    this.angle = Math.PI * 0.3 + Math.random() * Math.PI * 0.4;
+    this.speed = 0.0003 + Math.random() * 0.0006;
+    this.swingRange = 0.3 + Math.random() * 0.8;
+    this.phase = Math.random() * Math.PI * 2;
+    this.width = 1 + Math.random() * 2;
+    this.length = 0.8 + Math.random() * 0.6;
+
+    const colorTypes = [
+      [0, 229, 255],
+      [224, 64, 251],
+      [124, 58, 237],
+      [255, 50, 100],
+      [50, 255, 150],
+      [255, 200, 0],
+      [0, 255, 200],
+      [255, 100, 50],
+    ];
+    this.color = colorTypes[Math.floor(Math.random() * colorTypes.length)];
+    this.alpha = 0.15 + Math.random() * 0.2;
+    this.flickerSpeed = 2 + Math.random() * 4;
+    this.side = Math.random() > 0.5 ? 1 : -1;
+  }
+}
+
+const lasers = [];
+for (let i = 0; i < 14; i++) {
+  lasers.push(new LaserBeam());
+}
+
+function drawLasers(time) {
+  const w = laserCanvas.width, h = laserCanvas.height;
+  laserCtx.clearRect(0, 0, w, h);
+
+  const beatBoost = isBeat ? 2.5 : 1;
+
+  lasers.forEach((laser, idx) => {
+    const t = time * 0.001;
+    const swing = Math.sin(t * laser.speed * 1000 + laser.phase) * laser.swingRange;
+    const currentAngle = laser.angle + swing;
+    const flicker = 0.5 + 0.5 * Math.sin(t * laser.flickerSpeed + idx);
+
+    const ox = laser.originX * w;
+    const oy = laser.originY * h;
+    const len = laser.length * Math.max(w, h);
+
+    // Mouse reactivity - lasers bend toward mouse
+    const mouseInfluence = 0.1;
+    const toMouseAngle = Math.atan2(mouseY - oy, mouseX - ox);
+    const finalAngle = currentAngle + (toMouseAngle - currentAngle) * mouseInfluence;
+
+    const ex = ox + Math.cos(finalAngle) * len;
+    const ey = oy + Math.sin(finalAngle) * len;
+
+    const alpha = laser.alpha * flicker * beatBoost;
+
+    // Main beam
+    laserCtx.save();
+    laserCtx.globalAlpha = Math.min(1, alpha);
+    laserCtx.strokeStyle = `rgb(${laser.color[0]},${laser.color[1]},${laser.color[2]})`;
+    laserCtx.lineWidth = laser.width * (isBeat ? 2.5 : 1);
+    laserCtx.shadowColor = `rgba(${laser.color[0]},${laser.color[1]},${laser.color[2]},0.8)`;
+    laserCtx.shadowBlur = 15 * beatBoost;
+    laserCtx.beginPath();
+    laserCtx.moveTo(ox, oy);
+    laserCtx.lineTo(ex, ey);
+    laserCtx.stroke();
+
+    // Glow layer
+    laserCtx.globalAlpha = Math.min(1, alpha * 0.3);
+    laserCtx.lineWidth = laser.width * 6 * (isBeat ? 2 : 1);
+    laserCtx.shadowBlur = 30 * beatBoost;
+    laserCtx.beginPath();
+    laserCtx.moveTo(ox, oy);
+    laserCtx.lineTo(ex, ey);
+    laserCtx.stroke();
+
+    // Extra wide glow
+    laserCtx.globalAlpha = Math.min(1, alpha * 0.08);
+    laserCtx.lineWidth = laser.width * 20;
+    laserCtx.shadowBlur = 50;
+    laserCtx.beginPath();
+    laserCtx.moveTo(ox, oy);
+    laserCtx.lineTo(ex, ey);
+    laserCtx.stroke();
+
+    laserCtx.restore();
+
+    // Hit point glow (where laser hits the ground)
+    if (ey > h * 0.3) {
+      const grad = laserCtx.createRadialGradient(ex, ey, 0, ex, ey, 40 * beatBoost);
+      grad.addColorStop(0, `rgba(${laser.color[0]},${laser.color[1]},${laser.color[2]},${alpha * 0.4})`);
+      grad.addColorStop(1, `rgba(${laser.color[0]},${laser.color[1]},${laser.color[2]},0)`);
+      laserCtx.fillStyle = grad;
+      laserCtx.beginPath();
+      laserCtx.arc(ex, ey, 40 * beatBoost, 0, Math.PI * 2);
+      laserCtx.fill();
+    }
+  });
+}
+
+// ═══════════════════════════════════
+// PARTICLES
+// ═══════════════════════════════════
+const particleCanvas = document.getElementById('particle-canvas');
+const particleCtx = particleCanvas.getContext('2d');
+
+class Particle {
+  constructor() { this.reset(true); }
+
+  reset(initial = false) {
+    this.x = Math.random() * W();
+    this.y = initial ? Math.random() * H() : H() + 20;
+    this.size = 1 + Math.random() * 3;
+    this.speedX = (Math.random() - 0.5) * 0.5;
+    this.speedY = -0.3 - Math.random() * 1.5;
+    this.life = 1;
+    this.decay = 0.001 + Math.random() * 0.004;
+    const colorTypes = [
+      [0, 229, 255],
+      [224, 64, 251],
+      [124, 58, 237],
+      [255, 255, 255],
+      [255, 200, 50],
+      [50, 255, 200],
+    ];
+    this.color = colorTypes[Math.floor(Math.random() * colorTypes.length)];
+    this.twinkleSpeed = 2 + Math.random() * 5;
+    this.wobble = Math.random() * Math.PI * 2;
+    this.wobbleSpeed = 0.02 + Math.random() * 0.03;
+  }
+}
+
+const particles = [];
+for (let i = 0; i < 120; i++) particles.push(new Particle());
+
+// Mouse burst particles
+const burstParticles = [];
+
+class BurstParticle {
+  constructor(x, y) {
+    this.x = x; this.y = y;
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1 + Math.random() * 4;
+    this.vx = Math.cos(angle) * speed;
+    this.vy = Math.sin(angle) * speed;
+    this.size = 1 + Math.random() * 3;
+    this.life = 1;
+    this.decay = 0.015 + Math.random() * 0.02;
+    const colors = [[0,229,255],[224,64,251],[255,255,255],[255,200,50]];
+    this.color = colors[Math.floor(Math.random() * colors.length)];
+  }
+}
+
+let lastBurstTime = 0;
+window.addEventListener('mousemove', e => {
+  const now = performance.now();
+  if (now - lastBurstTime > 50) {
+    lastBurstTime = now;
+    for (let i = 0; i < 2; i++) {
+      burstParticles.push(new BurstParticle(e.clientX, e.clientY));
+    }
+  }
+});
+
+window.addEventListener('click', e => {
+  for (let i = 0; i < 30; i++) {
+    burstParticles.push(new BurstParticle(e.clientX, e.clientY));
+  }
+});
+
+function drawParticles(time) {
+  const w = particleCanvas.width, h = particleCanvas.height;
+  particleCtx.clearRect(0, 0, w, h);
+  const t = time * 0.001;
+  const beatBoost = isBeat ? 2 : 1;
+
+  // Ambient particles
+  particles.forEach(p => {
+    p.wobble += p.wobbleSpeed;
+    p.x += p.speedX + Math.sin(p.wobble) * 0.3;
+    p.y += p.speedY;
+    p.life -= p.decay;
+
+    if (p.life <= 0 || p.y < -20) p.reset();
+
+    // Mouse attraction
+    const dx = mouseX - p.x;
+    const dy = mouseY - p.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 200) {
+      const force = (200 - dist) / 200 * 0.3;
+      p.x += dx * force * 0.01;
+      p.y += dy * force * 0.01;
+    }
+
+    const twinkle = 0.3 + 0.7 * Math.abs(Math.sin(t * p.twinkleSpeed));
+    const alpha = p.life * twinkle * beatBoost;
+    const size = p.size * (isBeat ? 1.5 : 1);
+
+    particleCtx.save();
+    particleCtx.globalAlpha = Math.min(1, alpha * 0.8);
+    particleCtx.fillStyle = `rgb(${p.color[0]},${p.color[1]},${p.color[2]})`;
+    particleCtx.shadowColor = `rgba(${p.color[0]},${p.color[1]},${p.color[2]},0.8)`;
+    particleCtx.shadowBlur = 10;
+    particleCtx.beginPath();
+    particleCtx.arc(p.x, p.y, size, 0, Math.PI * 2);
+    particleCtx.fill();
+    particleCtx.restore();
+  });
+
+  // Burst particles
+  for (let i = burstParticles.length - 1; i >= 0; i--) {
+    const p = burstParticles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.05; // gravity
+    p.vx *= 0.98;
+    p.life -= p.decay;
+
+    if (p.life <= 0) {
+      burstParticles.splice(i, 1);
+      continue;
+    }
+
+    particleCtx.save();
+    particleCtx.globalAlpha = p.life;
+    particleCtx.fillStyle = `rgb(${p.color[0]},${p.color[1]},${p.color[2]})`;
+    particleCtx.shadowColor = `rgba(${p.color[0]},${p.color[1]},${p.color[2]},1)`;
+    particleCtx.shadowBlur = 12;
+    particleCtx.beginPath();
+    particleCtx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+    particleCtx.fill();
+    particleCtx.restore();
+  }
+}
+
+// ═══════════════════════════════════
+// SPOTLIGHTS
+// ═══════════════════════════════════
+const spotlightCanvas = document.getElementById('spotlight-canvas');
+const spotlightCtx = spotlightCanvas.getContext('2d');
+
+class Spotlight {
+  constructor(idx, total) {
+    this.idx = idx;
+    this.total = total;
+    this.baseX = (idx + 0.5) / total;
+    this.speed = 0.3 + Math.random() * 0.5;
+    this.phase = (idx / total) * Math.PI * 2;
+    this.range = 0.15 + Math.random() * 0.2;
+    const colors = [
+      [0, 229, 255, 0.04],
+      [224, 64, 251, 0.035],
+      [124, 58, 237, 0.03],
+      [255, 100, 100, 0.025],
+      [50, 255, 150, 0.03],
+    ];
+    this.color = colors[idx % colors.length];
+    this.coneWidth = 0.08 + Math.random() * 0.06;
+  }
+}
+
+const spotlights = [];
+for (let i = 0; i < 5; i++) spotlights.push(new Spotlight(i, 5));
+
+function drawSpotlights(time) {
+  const w = spotlightCanvas.width, h = spotlightCanvas.height;
+  spotlightCtx.clearRect(0, 0, w, h);
+  const t = time * 0.001;
+  const beatBoost = isBeat ? 2 : 1;
+
+  spotlights.forEach(spot => {
+    const swing = Math.sin(t * spot.speed + spot.phase) * spot.range;
+    const x = (spot.baseX + swing) * w;
+    const originY = -30;
+
+    // Mouse influence
+    const mouseInfluence = ((mouseX / w) - 0.5) * 0.08;
+    const finalX = x + mouseInfluence * w;
+
+    // Cone shape
+    const coneHalfWidth = spot.coneWidth * w;
+    const alpha = spot.color[3] * beatBoost;
+
+    const grad = spotlightCtx.createLinearGradient(finalX, originY, finalX, h);
+    grad.addColorStop(0, `rgba(${spot.color[0]},${spot.color[1]},${spot.color[2]},${alpha * 1.5})`);
+    grad.addColorStop(0.5, `rgba(${spot.color[0]},${spot.color[1]},${spot.color[2]},${alpha * 0.3})`);
+    grad.addColorStop(1, `rgba(${spot.color[0]},${spot.color[1]},${spot.color[2]},0)`);
+
+    spotlightCtx.save();
+    spotlightCtx.fillStyle = grad;
+    spotlightCtx.beginPath();
+    spotlightCtx.moveTo(finalX, originY);
+    spotlightCtx.lineTo(finalX - coneHalfWidth * 3, h);
+    spotlightCtx.lineTo(finalX + coneHalfWidth * 3, h);
+    spotlightCtx.closePath();
+    spotlightCtx.fill();
+    spotlightCtx.restore();
+  });
+}
+
+// ═══════════════════════════════════
+// VISUALIZER BAR
+// ═══════════════════════════════════
+const vizCanvas = document.getElementById('visualizer-canvas');
+const vizCtx = vizCanvas.getContext('2d');
+const BAR_COUNT = 64;
+const vizBars = new Array(BAR_COUNT).fill(0);
+const vizTargets = new Array(BAR_COUNT).fill(0);
+
+function updateVisualizer(time) {
+  const t = time * 0.001;
+
+  // Simulate music frequency data
+  for (let i = 0; i < BAR_COUNT; i++) {
+    const freq = i / BAR_COUNT;
+    // Bass heavy simulation
+    const bass = Math.sin(t * 4 + i * 0.1) * 0.4 * (1 - freq);
+    const mid = Math.sin(t * 7 + i * 0.3) * 0.3 * Math.exp(-Math.abs(freq - 0.4) * 5);
+    const high = Math.sin(t * 12 + i * 0.5) * 0.15 * freq;
+    const noise = Math.random() * 0.1;
+    const beatPulse = isBeat ? 0.4 * (1 - freq * 0.5) : 0;
+
+    vizTargets[i] = Math.abs(bass + mid + high + noise + beatPulse);
+    vizBars[i] += (vizTargets[i] - vizBars[i]) * 0.2;
+  }
+
+  const w = vizCanvas.width;
+  const h = 100;
+  vizCtx.clearRect(0, 0, w, h);
+
+  const barWidth = w / BAR_COUNT;
+  const gap = 2;
+
+  for (let i = 0; i < BAR_COUNT; i++) {
+    const barH = vizBars[i] * h * 1.2;
+    const x = i * barWidth;
+    const hue = 180 + (i / BAR_COUNT) * 120;
+    const lightness = 50 + vizBars[i] * 30;
+
+    // Reflected bar (bottom)
+    const grad = vizCtx.createLinearGradient(0, h, 0, h - barH);
+    grad.addColorStop(0, `hsla(${hue}, 100%, ${lightness}%, 0.6)`);
+    grad.addColorStop(0.5, `hsla(${hue}, 100%, ${lightness}%, 0.3)`);
+    grad.addColorStop(1, `hsla(${hue}, 100%, ${lightness}%, 0.05)`);
+
+    vizCtx.fillStyle = grad;
+    vizCtx.shadowColor = `hsla(${hue}, 100%, 60%, 0.4)`;
+    vizCtx.shadowBlur = 8;
+
+    vizCtx.fillRect(x + gap / 2, h - barH, barWidth - gap, barH);
+  }
+}
+
+// ═══════════════════════════════════
+// DISCO BALL REFLECTIONS
+// ═══════════════════════════════════
+class DiscoReflection {
+  constructor() { this.reset(); }
+
+  reset() {
+    this.x = Math.random() * W();
+    this.y = Math.random() * H();
+    this.size = 2 + Math.random() * 6;
+    this.speedX = (Math.random() - 0.5) * 2;
+    this.speedY = (Math.random() - 0.5) * 2;
+    this.life = 0.5 + Math.random() * 0.5;
+    this.maxLife = this.life;
+    this.alpha = 0.1 + Math.random() * 0.25;
+  }
+}
+
+const reflections = [];
+for (let i = 0; i < 30; i++) reflections.push(new DiscoReflection());
+
+function drawDiscoReflections(time) {
+  const ctx = particleCtx; // reuse particle canvas
+
+  reflections.forEach(r => {
+    r.x += r.speedX;
+    r.y += r.speedY;
+    r.life -= 0.005;
+
+    if (r.life <= 0 || r.x < 0 || r.x > W() || r.y < 0 || r.y > H()) {
+      r.reset();
+    }
+
+    const fade = r.life / r.maxLife;
+    const alpha = r.alpha * fade * (isBeat ? 2 : 1);
+
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, alpha);
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = 'rgba(255,255,255,0.5)';
+    ctx.shadowBlur = 6;
+
+    // Small square reflections
+    ctx.translate(r.x, r.y);
+    ctx.rotate(r.life * 2);
+    ctx.fillRect(-r.size / 2, -r.size / 2, r.size, r.size);
+    ctx.restore();
+  });
+}
+
+// ═══════════════════════════════════
+// FLOATING EMOJIS (periodically)
+// ═══════════════════════════════════
+const emojis = ['🎵', '🎶', '🎧', '🔊', '🎤', '✨', '💜', '🎸', '🎹', '🪩', '🎷', '🥁'];
+let emojiTimer = 0;
+
+function spawnEmoji(time) {
+  if (time - emojiTimer > 3000) {
+    emojiTimer = time;
+    const el = document.createElement('div');
+    el.className = 'float-emoji';
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left = (10 + Math.random() * 80) + 'vw';
+    el.style.bottom = '20px';
+    el.style.fontSize = (16 + Math.random() * 14) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 6000);
+  }
+}
+
+// ═══════════════════════════════════
+// MAIN RENDER LOOP
+// ═══════════════════════════════════
+function mainLoop(time) {
+  requestAnimationFrame(mainLoop);
+  checkBeat(time);
+  drawAurora(time);
+  drawLasers(time);
+  drawParticles(time);
+  drawDiscoReflections(time);
+  drawSpotlights(time);
+  updateVisualizer(time);
+  updateTrail();
+  spawnEmoji(time);
+}
+
+requestAnimationFrame(mainLoop);
+
+// ═══════════════════════════════════
+// TILT EFFECT ON CARDS
+// ═══════════════════════════════════
+document.querySelectorAll('.feat-card, .action-panel').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const rect = card.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (e.clientX - cx) / rect.width;
+    const dy = (e.clientY - cy) / rect.height;
+    card.style.transform = `perspective(800px) rotateX(${-dy * 8}deg) rotateY(${dx * 8}deg) translateY(-4px) scale(1.02)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+    card.style.transition = 'transform 0.5s cubic-bezier(0.34,1.56,0.64,1), border-color 0.35s ease, box-shadow 0.35s ease';
+  });
+  card.addEventListener('mouseenter', () => {
+    card.style.transition = 'transform 0.08s ease, border-color 0.35s ease, box-shadow 0.35s ease';
+  });
+});
+
+// ═══════════════════════════════════
+// BUTTON CLICK EFFECTS
+// ═══════════════════════════════════
+document.querySelectorAll('.btn').forEach(btn => {
+  btn.addEventListener('click', e => {
+    // Ripple
+    const rect = btn.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.style.cssText = `
+      position: absolute; border-radius: 50%;
+      width: 0; height: 0;
+      left: ${e.clientX - rect.left}px;
+      top: ${e.clientY - rect.top}px;
+      background: rgba(255,255,255,0.3);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: ripple-out 0.6s ease forwards;
+    `;
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+
+    // Big burst
+    for (let i = 0; i < 50; i++) {
+      burstParticles.push(new BurstParticle(e.clientX, e.clientY));
+    }
+  });
+});
+
+// Ripple animation
+const rippleStyle = document.createElement('style');
+rippleStyle.textContent = `
+  @keyframes ripple-out {
+    to { width: 300px; height: 300px; opacity: 0; }
+  }
+`;
+document.head.appendChild(rippleStyle);
+</script>
+</body>
+</html>
