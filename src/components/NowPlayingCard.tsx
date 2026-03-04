@@ -44,11 +44,9 @@ export function NowPlayingCard({ song, isPlaying, progress, onPlayPause, isHost 
             {isPlaying ? (
               <Equalizer isPlaying barCount={3} />
             ) : (
-              <>
-                <span className="relative flex h-2 w-2">
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-muted-foreground" />
-                </span>
-              </>
+              <span className="relative flex h-2 w-2">
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-muted-foreground" />
+              </span>
             )}
             <span className="uppercase tracking-wider text-xs font-semibold">Now Playing</span>
           </div>
@@ -57,24 +55,27 @@ export function NowPlayingCard({ song, isPlaying, progress, onPlayPause, isHost 
         {song ? (
           <>
             <div className="flex items-start gap-4">
+              {/* Album cover placeholder */}
               <motion.div
                 animate={isPlaying ? { rotate: 360 } : {}}
                 transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                className="flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary shrink-0"
+                className="flex h-20 w-20 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-secondary to-accent shrink-0 shadow-[0_0_30px_hsl(var(--primary)/0.3)]"
               >
                 <Music className="h-8 w-8 text-primary-foreground" />
               </motion.div>
               <div className="flex-1 min-w-0">
                 <h2 className="font-display text-2xl font-bold tracking-tight truncate">{song.title}</h2>
                 <p className="text-muted-foreground truncate">{song.artist || 'Unknown Artist'}</p>
-                <motion.p
-                  className="mt-1 text-sm text-primary font-medium"
-                  key={song.vote_count}
-                  initial={{ scale: 1.2 }}
-                  animate={{ scale: 1 }}
-                >
-                  {song.vote_count} votes
-                </motion.p>
+                <div className="mt-2 flex items-center gap-2">
+                  <motion.span
+                    className="text-sm text-primary font-bold flex items-center gap-1"
+                    key={song.vote_count}
+                    initial={{ scale: 1.3 }}
+                    animate={{ scale: 1 }}
+                  >
+                    🔥 {song.vote_count} votes
+                  </motion.span>
+                </div>
               </div>
               {isHost && onPlayPause && (
                 <motion.button
@@ -104,6 +105,27 @@ export function NowPlayingCard({ song, isPlaying, progress, onPlayPause, isHost 
                 </div>
               )}
             </div>
+
+            {/* Animated soundwave visualizer */}
+            {isPlaying && (
+              <div className="mt-4 flex items-end justify-center gap-[3px] h-8">
+                {Array.from({ length: 32 }).map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="w-[3px] rounded-full bg-gradient-to-t from-primary to-accent"
+                    animate={{
+                      height: [`${4 + Math.random() * 8}px`, `${12 + Math.random() * 20}px`, `${4 + Math.random() * 8}px`],
+                    }}
+                    transition={{
+                      duration: 0.5 + Math.random() * 0.5,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                      delay: i * 0.03,
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </>
         ) : (
           <div className="flex flex-col items-center justify-center py-8 text-center">

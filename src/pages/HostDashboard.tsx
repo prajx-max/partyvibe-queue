@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Disc3, Settings, Lock, Unlock, RotateCcw, ArrowLeft } from 'lucide-react';
+import { Lock, Unlock, RotateCcw, ArrowLeft } from 'lucide-react';
 import { PartyBackground } from '@/components/PartyBackground';
-import { Equalizer } from '@/components/Equalizer';
 import { Button } from '@/components/ui/button';
 import { NowPlayingCard } from '@/components/NowPlayingCard';
 import { UpNextCard } from '@/components/UpNextCard';
@@ -18,6 +17,7 @@ import { useSession } from '@/hooks/useSession';
 import { useSongs, SongWithVotes } from '@/hooks/useSongs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import vibeJamLogo from '@/assets/vibejam-logo.png';
 
 export default function HostDashboard() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -31,14 +31,10 @@ export default function HostDashboard() {
   const [progress, setProgress] = useState(0);
   const [currentSong, setCurrentSong] = useState<SongWithVotes | null>(null);
 
-  // Auth check
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/');
-    }
+    if (!authLoading && !user) navigate('/');
   }, [user, authLoading, navigate]);
 
-  // Host check
   useEffect(() => {
     if (session && user && session.host_id !== user.id) {
       toast.error("You're not the host of this session");
@@ -46,12 +42,10 @@ export default function HostDashboard() {
     }
   }, [session, user, navigate]);
 
-  // Set current song based on queue
   useEffect(() => {
     if (songs && songs.length > 0) {
       const topSong = songs[0];
       if (!currentSong || currentSong.id !== topSong.id) {
-        // Only auto-switch if nothing is playing or song ended
         if (!currentSong || progress >= 99) {
           setCurrentSong(topSong);
         }
@@ -62,7 +56,6 @@ export default function HostDashboard() {
   const handleSongEnd = () => {
     setProgress(0);
     if (songs && songs.length > 1) {
-      // Play next highest voted song
       setCurrentSong(songs.find(s => s.id !== currentSong?.id) || null);
       setIsPlaying(true);
     } else {
@@ -73,57 +66,29 @@ export default function HostDashboard() {
 
   const toggleVoting = async () => {
     if (!session) return;
-    
-    const { error } = await supabase
-      .from('sessions')
-      .update({ is_voting_open: !session.is_voting_open })
-      .eq('id', session.id);
-
-    if (error) {
-      toast.error('Failed to toggle voting');
-    } else {
-      refetchSession();
-      toast.success(session.is_voting_open ? 'Voting locked' : 'Voting unlocked');
-    }
+    const { error } = await supabase.from('sessions').update({ is_voting_open: !session.is_voting_open }).eq('id', session.id);
+    if (error) toast.error('Failed to toggle voting');
+    else { refetchSession(); toast.success(session.is_voting_open ? 'Voting locked' : 'Voting unlocked'); }
   };
 
   const resetVotes = async () => {
     if (!sessionId) return;
-    
-    const { error } = await supabase
-      .from('votes')
-      .delete()
-      .eq('session_id', sessionId);
-
-    if (error) {
-      toast.error('Failed to reset votes');
-    } else {
-      refetchSongs();
-      toast.success('All votes reset');
-    }
+    const { error } = await supabase.from('votes').delete().eq('session_id', sessionId);
+    if (error) toast.error('Failed to reset votes');
+    else { refetchSongs(); toast.success('All votes reset'); }
   };
 
   const removeSong = async (songId: string) => {
-    const { error } = await supabase
-      .from('songs')
-      .update({ is_active: false })
-      .eq('id', songId);
-
-    if (error) {
-      toast.error('Failed to remove song');
-    } else {
-      if (currentSong?.id === songId) {
-        handleSongEnd();
-      }
+    const { error } = await supabase.from('songs').update({ is_active: false }).eq('id', songId);
+    if (error) toast.error('Failed to remove song');
+    else {
+      if (currentSong?.id === songId) handleSongEnd();
       refetchSongs();
       toast.success('Song removed');
     }
   };
 
-  const handleVote = async (songId: string) => {
-    // Host can vote too for testing
-    toast.info('Use the guest page to vote!');
-  };
+  const handleVote = async () => { toast.info('Use the guest page to vote!'); };
 
   const filteredSongs = songs?.filter(
     (song) =>
@@ -136,7 +101,7 @@ export default function HostDashboard() {
   if (authLoading || sessionLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <Disc3 className="h-12 w-12 animate-spin text-primary" />
+        <div className="h-12 w-12 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     );
   }
@@ -153,7 +118,6 @@ export default function HostDashboard() {
   return (
     <div className="min-h-screen party-gradient-bg">
       <PartyBackground />
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 glass-heavy">
         <div className="container mx-auto flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
@@ -161,32 +125,19 @@ export default function HostDashboard() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-2">
-              <Disc3 className="h-6 w-6 text-primary" />
+              <img src={vibeJamLogo} alt="VibeJam" className="h-7 w-7 rounded-lg" />
               <span className="font-display font-bold">{session.name}</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleVoting}
+              variant="outline" size="sm" onClick={toggleVoting}
               className={session.is_voting_open ? '' : 'border-destructive text-destructive'}
             >
-              {session.is_voting_open ? (
-                <>
-                  <Unlock className="mr-2 h-4 w-4" />
-                  Voting Open
-                </>
-              ) : (
-                <>
-                  <Lock className="mr-2 h-4 w-4" />
-                  Voting Locked
-                </>
-              )}
+              {session.is_voting_open ? <><Unlock className="mr-2 h-4 w-4" />Voting Open</> : <><Lock className="mr-2 h-4 w-4" />Voting Locked</>}
             </Button>
             <Button variant="outline" size="sm" onClick={resetVotes}>
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Reset Votes
+              <RotateCcw className="mr-2 h-4 w-4" />Reset
             </Button>
           </div>
         </div>
@@ -194,66 +145,30 @@ export default function HostDashboard() {
 
       <main className="container mx-auto p-4 lg:p-6">
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left column - Player & Controls */}
           <div className="lg:col-span-2 space-y-6">
-            <NowPlayingCard
-              song={currentSong}
-              isPlaying={isPlaying}
-              progress={progress}
-              onPlayPause={() => setIsPlaying(!isPlaying)}
-              isHost
-            />
-
-            <AudioPlayer
-              currentSong={currentSong}
-              onSongEnd={handleSongEnd}
-              onProgressChange={setProgress}
-              isPlaying={isPlaying}
-              setIsPlaying={setIsPlaying}
-            />
-
+            <NowPlayingCard song={currentSong} isPlaying={isPlaying} progress={progress} onPlayPause={() => setIsPlaying(!isPlaying)} isHost />
+            <AudioPlayer currentSong={currentSong} onSongEnd={handleSongEnd} onProgressChange={setProgress} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
             <UpNextCard song={upNextSong} />
 
-            {/* Song Queue */}
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-display text-xl font-semibold">Song Queue</h2>
-                <span className="text-sm text-muted-foreground">
-                  {songs?.length || 0} songs
-                </span>
+                <span className="text-sm text-muted-foreground">{songs?.length || 0} songs</span>
               </div>
-
-              <SearchBar
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder="Search queue..."
-              />
-
+              <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search queue..." />
               <div className="mt-4 space-y-2 max-h-[400px] overflow-y-auto">
                 <AnimatePresence>
                   {filteredSongs?.map((song, index) => (
-                    <SongCard
-                      key={song.id}
-                      song={song}
-                      rank={index + 1}
-                      onVote={handleVote}
-                      onRemove={removeSong}
-                      isHost
-                      votingLocked={!session.is_voting_open}
-                    />
+                    <SongCard key={song.id} song={song} rank={index + 1} onVote={handleVote} onRemove={removeSong} isHost votingLocked={!session.is_voting_open} />
                   ))}
                 </AnimatePresence>
-
                 {(!filteredSongs || filteredSongs.length === 0) && (
-                  <p className="py-8 text-center text-muted-foreground">
-                    No songs yet. Upload some tracks!
-                  </p>
+                  <p className="py-8 text-center text-muted-foreground">No songs yet. Add some tracks!</p>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Right column - QR, Search & Upload */}
           <div className="space-y-6">
             <QRCodeDisplay sessionId={session.id} sessionName={session.name} />
             <JioSaavnSearch sessionId={session.id} onSongAdded={refetchSongs} />

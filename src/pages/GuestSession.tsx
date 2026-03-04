@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Disc3, Music } from 'lucide-react';
+import { Music } from 'lucide-react';
 import { PartyBackground } from '@/components/PartyBackground';
 import { NowPlayingCard } from '@/components/NowPlayingCard';
 import { UpNextCard } from '@/components/UpNextCard';
@@ -9,14 +9,14 @@ import { SongCard } from '@/components/SongCard';
 import { SearchBar } from '@/components/SearchBar';
 import { GuestSongRequest } from '@/components/GuestSongRequest';
 import { useSession } from '@/hooks/useSession';
-import { useSongs, SongWithVotes } from '@/hooks/useSongs';
+import { useSongs } from '@/hooks/useSongs';
 import { useVoterId } from '@/hooks/useVoterId';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import vibeJamLogo from '@/assets/vibejam-logo.png';
 
-// Rate limiting
-const VOTE_RATE_LIMIT = 10; // votes per minute
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const VOTE_RATE_LIMIT = 10;
+const RATE_LIMIT_WINDOW = 60000;
 
 export default function GuestSession() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -39,60 +39,26 @@ export default function GuestSession() {
 
   const handleVote = async (songId: string) => {
     if (!sessionId || votingInProgress) return;
-    if (!voterId) {
-      toast.error('Still connecting... try again in a moment');
-      return;
-    }
-
-    // Check if voting is open
-    if (!session?.is_voting_open) {
-      toast.error('Voting is currently locked');
-      return;
-    }
-
-    // Rate limit check
-    if (!checkRateLimit()) {
-      toast.error('Too many votes! Please wait a moment.');
-      return;
-    }
+    if (!voterId) { toast.error('Still connecting... try again in a moment'); return; }
+    if (!session?.is_voting_open) { toast.error('Voting is currently locked'); return; }
+    if (!checkRateLimit()) { toast.error('Too many votes! Please wait a moment.'); return; }
 
     setVotingInProgress(songId);
-
     const song = songs?.find((s) => s.id === songId);
     const hasVoted = song?.user_voted;
 
     try {
       if (hasVoted) {
-        // Remove vote
-        const { error } = await supabase
-          .from('votes')
-          .delete()
-          .eq('song_id', songId)
-          .eq('voter_id', voterId);
-
+        const { error } = await supabase.from('votes').delete().eq('song_id', songId).eq('voter_id', voterId);
         if (error) throw error;
       } else {
-        // Add vote
-        const { error } = await supabase.from('votes').insert({
-          session_id: sessionId,
-          song_id: songId,
-          voter_id: voterId,
-        });
-
+        const { error } = await supabase.from('votes').insert({ session_id: sessionId, song_id: songId, voter_id: voterId });
         if (error) throw error;
-
-        // Update first_vote_at if this is the first vote for the song
         if (song && !song.first_vote_at) {
-          await supabase
-            .from('songs')
-            .update({ first_vote_at: new Date().toISOString() })
-            .eq('id', songId);
+          await supabase.from('songs').update({ first_vote_at: new Date().toISOString() }).eq('id', songId);
         }
-
-        // Track for rate limiting
         setVoteTimestamps((prev) => [...prev, Date.now()]);
       }
-
       refetchSongs();
     } catch (error) {
       console.error('Vote error:', error);
@@ -111,7 +77,7 @@ export default function GuestSession() {
   if (sessionLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <Disc3 className="h-12 w-12 animate-spin text-primary" />
+        <div className="h-12 w-12 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     );
   }
@@ -121,9 +87,7 @@ export default function GuestSession() {
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
         <Music className="h-16 w-16 text-muted-foreground mb-4" />
         <h1 className="font-display text-2xl font-bold mb-2">Session Not Found</h1>
-        <p className="text-muted-foreground text-center">
-          This session may have ended or the link is invalid.
-        </p>
+        <p className="text-muted-foreground text-center">This session may have ended or the link is invalid.</p>
       </div>
     );
   }
@@ -132,55 +96,32 @@ export default function GuestSession() {
     <div className="min-h-screen party-gradient-bg">
       <PartyBackground />
 
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 glass-heavy">
         <div className="container mx-auto flex items-center justify-between p-4">
           <div className="flex items-center gap-2">
-            <Disc3 className="h-6 w-6 text-primary animate-spin" style={{ animationDuration: '3s' }} />
+            <img src={vibeJamLogo} alt="VibeJam" className="h-7 w-7 rounded-lg" />
             <span className="font-display font-bold">{session.name}</span>
           </div>
           <div className="flex items-center gap-2">
             {!session.is_voting_open && (
-              <span className="text-xs bg-destructive/20 text-destructive px-2 py-1 rounded-full">
-                Voting Locked
-              </span>
+              <span className="text-xs bg-destructive/20 text-destructive px-2 py-1 rounded-full">Voting Locked</span>
             )}
           </div>
         </div>
       </header>
 
       <main className="container mx-auto p-4 space-y-6 relative z-10 max-w-lg">
-        {/* Song Request Panel - always visible */}
-        <GuestSongRequest
-          sessionId={sessionId!}
-          onSongRequested={() => {
-            refetchSongs();
-          }}
-        />
-        {/* Now Playing */}
-        <NowPlayingCard
-          song={currentSong}
-          isPlaying={true}
-          progress={50}
-        />
-
-        {/* Up Next */}
+        <GuestSongRequest sessionId={sessionId!} onSongRequested={() => refetchSongs()} />
+        <NowPlayingCard song={currentSong} isPlaying={true} progress={50} />
         <UpNextCard song={upNextSong} />
 
-        {/* Song List */}
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display text-lg font-semibold">Vote for Songs</h2>
-            <span className="text-sm text-muted-foreground">
-              {songs?.length || 0} songs
-            </span>
+            <span className="text-sm text-muted-foreground">{songs?.length || 0} songs</span>
           </div>
 
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search songs..."
-          />
+          <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search songs..." />
 
           <div className="mt-4 space-y-2">
             <AnimatePresence>
@@ -200,7 +141,7 @@ export default function GuestSession() {
               <div className="py-12 text-center">
                 <Music className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">No songs yet</p>
-                <p className="text-sm text-muted-foreground">Waiting for the host to add music...</p>
+                <p className="text-sm text-muted-foreground">Search and request a song above!</p>
               </div>
             )}
           </div>
