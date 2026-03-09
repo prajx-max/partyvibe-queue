@@ -19,27 +19,15 @@ export function NowPlayingCard({ song, isPlaying, progress, onPlayPause, isHost 
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-2xl glass-heavy p-6 neon-border"
-    >
-      {/* Animated background glow */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          className="absolute -left-20 -top-20 h-44 w-44 rounded-full bg-primary/15 blur-3xl"
-          animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.25, 0.15] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute -bottom-20 -right-20 h-44 w-44 rounded-full bg-accent/15 blur-3xl"
-          animate={{ scale: [1.3, 1, 1.3], opacity: [0.15, 0.25, 0.15] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-        />
+    <div className="relative overflow-hidden rounded-2xl glass-heavy p-4 sm:p-6 neon-border">
+      {/* Background glow - CSS only, no framer-motion */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -left-20 -top-20 h-32 w-32 sm:h-44 sm:w-44 rounded-full bg-primary/15 blur-3xl animate-pulse-glow" />
+        <div className="absolute -bottom-20 -right-20 h-32 w-32 sm:h-44 sm:w-44 rounded-full bg-accent/15 blur-3xl animate-pulse-magenta" />
       </div>
 
       <div className="relative z-10">
-        <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="mb-3 sm:mb-4 flex items-center gap-2 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             {isPlaying ? (
               <Equalizer isPlaying barCount={3} />
@@ -54,89 +42,67 @@ export function NowPlayingCard({ song, isPlaying, progress, onPlayPause, isHost 
 
         {song ? (
           <>
-            <div className="flex items-start gap-4">
-              {/* Album cover placeholder */}
-              <motion.div
-                animate={isPlaying ? { rotate: 360 } : {}}
-                transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                className="flex h-20 w-20 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-secondary to-accent shrink-0 shadow-[0_0_30px_hsl(var(--primary)/0.3)]"
-              >
-                <Music className="h-8 w-8 text-primary-foreground" />
-              </motion.div>
+            <div className="flex items-start gap-3 sm:gap-4">
+              {/* Album cover - smaller on mobile, no rotation animation */}
+              <div className="flex h-14 w-14 sm:h-20 sm:w-20 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-secondary to-accent shrink-0 shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
+                <Music className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
+              </div>
               <div className="flex-1 min-w-0">
-                <h2 className="font-display text-2xl font-bold tracking-tight truncate">{song.title}</h2>
-                <p className="text-muted-foreground truncate">{song.artist || 'Unknown Artist'}</p>
-                <div className="mt-2 flex items-center gap-2">
-                  <motion.span
-                    className="text-sm text-primary font-bold flex items-center gap-1"
-                    key={song.vote_count}
-                    initial={{ scale: 1.3 }}
-                    animate={{ scale: 1 }}
-                  >
+                <h2 className="font-display text-lg sm:text-2xl font-bold tracking-tight truncate">{song.title}</h2>
+                <p className="text-sm text-muted-foreground truncate">{song.artist || 'Unknown Artist'}</p>
+                <div className="mt-1 sm:mt-2 flex items-center gap-2">
+                  <span className="text-sm text-primary font-bold flex items-center gap-1">
                     🔥 {song.vote_count} votes
-                  </motion.span>
+                  </span>
                 </div>
               </div>
               {isHost && onPlayPause && (
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
+                <button
                   onClick={onPlayPause}
-                  className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground glow-cyan shrink-0"
+                  className="flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-primary text-primary-foreground glow-cyan shrink-0 active:scale-95 transition-transform"
                 >
-                  {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-1" />}
-                </motion.button>
+                  {isPlaying ? <Pause className="h-5 w-5 sm:h-6 sm:w-6" /> : <Play className="h-5 w-5 sm:h-6 sm:w-6 ml-0.5" />}
+                </button>
               )}
             </div>
 
             {/* Progress bar */}
-            <div className="mt-6">
+            <div className="mt-4 sm:mt-6">
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-primary via-secondary to-accent"
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-primary via-secondary to-accent transition-[width] duration-100"
                   style={{ width: `${progress}%` }}
-                  transition={{ duration: 0.1 }}
                 />
               </div>
               {song.duration && (
-                <div className="mt-2 flex justify-between text-xs text-muted-foreground">
+                <div className="mt-1.5 sm:mt-2 flex justify-between text-xs text-muted-foreground">
                   <span>{formatTime((progress / 100) * song.duration)}</span>
                   <span>{formatTime(song.duration)}</span>
                 </div>
               )}
             </div>
 
-            {/* Animated soundwave visualizer */}
+            {/* CSS-only soundwave - 16 bars instead of 32 */}
             {isPlaying && (
-              <div className="mt-4 flex items-end justify-center gap-[3px] h-8">
-                {Array.from({ length: 32 }).map((_, i) => (
-                  <motion.div
+              <div className="mt-3 sm:mt-4 flex items-end justify-center gap-[3px] h-6 sm:h-8">
+                {Array.from({ length: 16 }).map((_, i) => (
+                  <div
                     key={i}
-                    className="w-[3px] rounded-full bg-gradient-to-t from-primary to-accent"
-                    animate={{
-                      height: [`${4 + Math.random() * 8}px`, `${12 + Math.random() * 20}px`, `${4 + Math.random() * 8}px`],
-                    }}
-                    transition={{
-                      duration: 0.5 + Math.random() * 0.5,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                      delay: i * 0.03,
-                    }}
+                    className="w-[2px] sm:w-[3px] rounded-full bg-gradient-to-t from-primary to-accent equalizer-bar"
+                    style={{ animationDelay: `${i * 0.05}s`, animationDuration: `${0.4 + (i % 5) * 0.15}s` }}
                   />
                 ))}
               </div>
             )}
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-              <Music className="mb-4 h-12 w-12 text-muted-foreground" />
-            </motion.div>
-            <p className="text-lg text-muted-foreground">No song playing</p>
+          <div className="flex flex-col items-center justify-center py-6 sm:py-8 text-center">
+            <Music className="mb-3 sm:mb-4 h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground animate-bounce-subtle" />
+            <p className="text-base sm:text-lg text-muted-foreground">No song playing</p>
             <p className="text-sm text-muted-foreground">Add songs and start voting!</p>
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }

@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* VibeJam Design System - Dark party theme with neon accents */
-
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
 
 @layer base {
@@ -66,13 +64,11 @@
   .gradient-text {
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(135deg, #00e5ff 0%, #7b9fff 100%);
-    filter: drop-shadow(0 0 30px rgba(0,229,255,0.3));
   }
 
   .gradient-text-accent {
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(135deg, #c084fc 0%, #e040fb 100%);
-    filter: drop-shadow(0 0 30px rgba(224,64,251,0.3));
   }
 
   .glow-cyan {
@@ -111,9 +107,16 @@
   }
 
   .glass-heavy {
-    @apply backdrop-blur-2xl;
     background: rgba(255,255,255,0.035);
     border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* Reduce backdrop-filter on mobile for performance */
+  @media (min-width: 768px) {
+    .glass-heavy {
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+    }
   }
 
   .party-gradient-bg {
@@ -161,18 +164,20 @@
   }
 }
 
-/* Feature card shimmer */
-.feat-shimmer {
-  position: absolute; inset: 0;
-  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.03) 45%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 55%, transparent 60%);
-  transform: translateX(-100%);
-  pointer-events: none;
-}
-.group:hover .feat-shimmer {
-  animation: shimmer-pass 0.8s ease forwards;
-}
-@keyframes shimmer-pass {
-  to { transform: translateX(100%); }
+/* Feature card shimmer - desktop only */
+@media (min-width: 768px) {
+  .feat-shimmer {
+    position: absolute; inset: 0;
+    background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.03) 45%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 55%, transparent 60%);
+    transform: translateX(-100%);
+    pointer-events: none;
+  }
+  .group:hover .feat-shimmer {
+    animation: shimmer-pass 0.8s ease forwards;
+  }
+  @keyframes shimmer-pass {
+    to { transform: translateX(100%); }
+  }
 }
 
 .feat-card-highlight::after {
@@ -186,4 +191,11 @@
   content: ''; position: absolute; inset: 0; border-radius: inherit;
   background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255,255,255,0.05), transparent);
   pointer-events: none;
+}
+
+/* Reduce animations on low-end / prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float, .animate-pulse-glow, .animate-pulse-magenta, .animate-bounce-subtle, .equalizer-bar {
+    animation: none !important;
+  }
 }
