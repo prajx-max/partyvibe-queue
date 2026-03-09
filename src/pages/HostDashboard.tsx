@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Lock, Unlock, RotateCcw, ArrowLeft } from 'lucide-react';
 import { PartyBackground } from '@/components/PartyBackground';
 import { Button } from '@/components/ui/button';
@@ -108,7 +108,7 @@ export default function HostDashboard() {
 
   if (!session) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
         <h1 className="font-display text-2xl font-bold mb-4">Session not found</h1>
         <Button onClick={() => navigate('/')}>Go Home</Button>
       </div>
@@ -119,57 +119,57 @@ export default function HostDashboard() {
     <div className="min-h-screen party-gradient-bg">
       <PartyBackground />
       <header className="sticky top-0 z-50 border-b border-border/50 glass-heavy">
-        <div className="container mx-auto flex items-center justify-between p-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
-              <ArrowLeft className="h-5 w-5" />
+        <div className="container mx-auto flex items-center justify-between p-3 sm:p-4 gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="shrink-0 h-8 w-8 sm:h-10 sm:w-10">
+              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-            <div className="flex items-center gap-2">
-              <img src={vibeJamLogo} alt="VibeJam" className="h-7 w-7 rounded-lg" />
-              <span className="font-display font-bold">{session.name}</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <img src={vibeJamLogo} alt="VibeJam" className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg shrink-0" />
+              <span className="font-display font-bold text-sm sm:text-base truncate">{session.name}</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <Button
               variant="outline" size="sm" onClick={toggleVoting}
-              className={session.is_voting_open ? '' : 'border-destructive text-destructive'}
+              className={`text-xs sm:text-sm px-2 sm:px-3 ${session.is_voting_open ? '' : 'border-destructive text-destructive'}`}
             >
-              {session.is_voting_open ? <><Unlock className="mr-2 h-4 w-4" />Voting Open</> : <><Lock className="mr-2 h-4 w-4" />Voting Locked</>}
+              {session.is_voting_open ? <><Unlock className="mr-1 sm:mr-2 h-3.5 w-3.5" /><span className="hidden sm:inline">Voting Open</span><span className="sm:hidden">Open</span></> : <><Lock className="mr-1 sm:mr-2 h-3.5 w-3.5" /><span className="hidden sm:inline">Voting Locked</span><span className="sm:hidden">Locked</span></>}
             </Button>
-            <Button variant="outline" size="sm" onClick={resetVotes}>
-              <RotateCcw className="mr-2 h-4 w-4" />Reset
+            <Button variant="outline" size="sm" onClick={resetVotes} className="text-xs sm:text-sm px-2 sm:px-3">
+              <RotateCcw className="mr-1 h-3.5 w-3.5" /><span className="hidden sm:inline">Reset</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto p-4 lg:p-6">
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+      <main className="container mx-auto p-3 sm:p-4 lg:p-6">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             <NowPlayingCard song={currentSong} isPlaying={isPlaying} progress={progress} onPlayPause={() => setIsPlaying(!isPlaying)} isHost />
             <AudioPlayer currentSong={currentSong} onSongEnd={handleSongEnd} onProgressChange={setProgress} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
             <UpNextCard song={upNextSong} />
 
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-display text-xl font-semibold">Song Queue</h2>
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h2 className="font-display text-lg sm:text-xl font-semibold">Song Queue</h2>
                 <span className="text-sm text-muted-foreground">{songs?.length || 0} songs</span>
               </div>
               <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search queue..." />
-              <div className="mt-4 space-y-2 max-h-[400px] overflow-y-auto">
+              <div className="mt-3 sm:mt-4 space-y-2 max-h-[350px] sm:max-h-[400px] overflow-y-auto">
                 <AnimatePresence>
                   {filteredSongs?.map((song, index) => (
                     <SongCard key={song.id} song={song} rank={index + 1} onVote={handleVote} onRemove={removeSong} isHost votingLocked={!session.is_voting_open} />
                   ))}
                 </AnimatePresence>
                 {(!filteredSongs || filteredSongs.length === 0) && (
-                  <p className="py-8 text-center text-muted-foreground">No songs yet. Add some tracks!</p>
+                  <p className="py-6 sm:py-8 text-center text-muted-foreground">No songs yet. Add some tracks!</p>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <QRCodeDisplay sessionId={session.id} sessionName={session.name} />
             <JioSaavnSearch sessionId={session.id} onSongAdded={refetchSongs} />
             <SongUpload sessionId={session.id} onUploadComplete={refetchSongs} />
