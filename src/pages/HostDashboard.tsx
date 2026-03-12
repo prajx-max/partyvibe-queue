@@ -56,11 +56,23 @@ export default function HostDashboard() {
   const handleSongEnd = () => {
     setProgress(0);
     if (songs && songs.length > 1) {
-      setCurrentSong(songs.find(s => s.id !== currentSong?.id) || null);
+      // Find the next song that isn't the current one
+      const nextSong = songs.find(s => s.id !== currentSong?.id);
+      setCurrentSong(nextSong || null);
       setIsPlaying(true);
     } else {
       setIsPlaying(false);
       setCurrentSong(null);
+    }
+  };
+
+  const handlePlaySong = (songId: string) => {
+    const song = songs?.find(s => s.id === songId);
+    if (song) {
+      setCurrentSong(song);
+      setIsPlaying(true);
+      setProgress(0);
+      toast.success(`Now playing: ${song.title}`);
     }
   };
 
