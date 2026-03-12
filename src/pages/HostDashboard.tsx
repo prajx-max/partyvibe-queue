@@ -91,13 +91,39 @@ export default function HostDashboard() {
   };
 
   const removeSong = async (songId: string) => {
-    const { error } = await supabase.from('songs').update({ is_active: false }).eq('id', songId);
-    if (error) toast.error('Failed to remove song');
-    else {
-      if (currentSong?.id === songId) handleSongEnd();
-      refetchSongs();
-      toast.success('Song removed');
+    if (!sessionId) return;
+
+    const { error: votesError } = await supabase
+      .from('votes')
+      .delete()
+      .eq('session_id', sessionId)
+      .eq('song_id', songId);
+
+    if (votesError) {
+      toast.error('Failed to remove song');
+      return;
     }
+
+    const { error } = await supabase
+      .from('songs')
+      .delete()
+      .eq('id', songId)
+      .eq('session_id', sessionId);
+
+    if (error) {
+      toast.error('Failed to remove song');
+      return;
+    }
+
+    if (currentSong?.id === songId) {
+      const nextSong = songs?.find((s) => s.id !== songId) ?? null;
+      setCurrentSong(nextSong);
+      setProgress(0);
+      setIsPlaying(Boolean(nextSong));
+    }
+
+    refetchSongs();
+    toast.success('Song removed');
   };
 
   const handleVote = async () => { toast.info('Use the guest page to vote!'); };
