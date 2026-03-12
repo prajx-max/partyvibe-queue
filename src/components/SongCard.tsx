@@ -1,20 +1,21 @@
 import { motion } from 'framer-motion';
-import { Music, Trash2, ChevronUp } from 'lucide-react';
+import { Music, Trash2, ChevronUp, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SongWithVotes } from '@/hooks/useSongs';
-import { useEffect, useRef } from 'react';
 
 interface SongCardProps {
   song: SongWithVotes;
   rank: number;
   onVote: (songId: string) => void;
   onRemove?: (songId: string) => void;
+  onPlay?: (songId: string) => void;
   isVoting?: boolean;
   isHost?: boolean;
   votingLocked?: boolean;
+  isCurrentSong?: boolean;
 }
 
-export function SongCard({ song, rank, onVote, onRemove, isVoting, isHost, votingLocked }: SongCardProps) {
+export function SongCard({ song, rank, onVote, onRemove, onPlay, isVoting, isHost, votingLocked, isCurrentSong }: SongCardProps) {
   const isTopSong = rank === 1 && song.vote_count > 0;
 
   return (
@@ -25,7 +26,7 @@ export function SongCard({ song, rank, onVote, onRemove, isVoting, isHost, votin
       transition={{ duration: 0.2 }}
       layout
       className={`group relative flex items-center gap-2 sm:gap-3 rounded-xl glass-heavy p-2.5 sm:p-3 transition-all ${
-        isTopSong ? 'neon-border animate-pulse-glow' : 'border border-border/50'
+        isCurrentSong ? 'ring-2 ring-primary/60 bg-primary/5' : isTopSong ? 'neon-border animate-pulse-glow' : 'border border-border/50'
       }`}
     >
       {/* Rank badge */}
@@ -71,16 +72,32 @@ export function SongCard({ song, rank, onVote, onRemove, isVoting, isHost, votin
         <ChevronUp className={`h-5 w-5 transition-all ${song.user_voted ? 'text-primary' : ''}`} />
       </button>
 
-      {/* Remove button (host only) */}
-      {isHost && onRemove && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0 hidden sm:flex"
-          onClick={() => onRemove(song.id)}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+      {/* Host controls: Play & Remove */}
+      {isHost && (
+        <div className="flex items-center gap-1 shrink-0">
+          {onPlay && !isCurrentSong && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-primary"
+              onClick={() => onPlay(song.id)}
+              title="Play this song now"
+            >
+              <Play className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          {onRemove && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+              onClick={() => onRemove(song.id)}
+              title="Remove song"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
       )}
     </motion.div>
   );
