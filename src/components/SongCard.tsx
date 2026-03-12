@@ -9,9 +9,11 @@ interface SongCardProps {
   rank: number;
   onVote: (songId: string) => void;
   onRemove?: (songId: string) => void;
+  onPlay?: (songId: string) => void;
   isVoting?: boolean;
   isHost?: boolean;
   votingLocked?: boolean;
+  isCurrentSong?: boolean;
 }
 
 export function SongCard({ song, rank, onVote, onRemove, isVoting, isHost, votingLocked }: SongCardProps) {
