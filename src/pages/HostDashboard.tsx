@@ -171,7 +171,7 @@ export default function HostDashboard() {
               <div className="mt-3 sm:mt-4 space-y-2 max-h-[350px] sm:max-h-[400px] overflow-y-auto">
                 <AnimatePresence>
                   {filteredSongs?.map((song, index) => (
-                    <SongCard key={song.id} song={song} rank={index + 1} onVote={handleVote} onRemove={removeSong} isHost votingLocked={!session.is_voting_open} />
+                    <SongCard key={song.id} song={song} rank={index + 1} onVote={handleVote} onRemove={removeSong} onPlay={handlePlaySong} isHost votingLocked={!session.is_voting_open} isCurrentSong={currentSong?.id === song.id} />
                   ))}
                 </AnimatePresence>
                 {(!filteredSongs || filteredSongs.length === 0) && (
