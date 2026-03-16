@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { PartyBackground } from '@/components/PartyBackground';
 import { Equalizer } from '@/components/Equalizer';
+import { Navbar } from '@/components/Navbar';
 import vibeJamLogo from '@/assets/vibejam-logo.png';
 
 const containerVariants = {
@@ -26,9 +27,9 @@ const itemVariants = {
 };
 
 const featureColors = [
-  { icon: 'bg-gradient-to-br from-[rgba(0,229,255,0.2)] to-[rgba(0,229,255,0.05)] border border-[rgba(0,229,255,0.25)]', hover: '' },
-  { icon: 'bg-gradient-to-br from-[rgba(224,64,251,0.25)] to-[rgba(224,64,251,0.05)] border border-[rgba(224,64,251,0.3)]', hover: '' },
-  { icon: 'bg-gradient-to-br from-[rgba(124,58,237,0.3)] to-[rgba(124,58,237,0.08)] border border-[rgba(124,58,237,0.35)]', hover: '' },
+  { icon: 'bg-gradient-to-br from-[rgba(0,229,255,0.2)] to-[rgba(0,229,255,0.05)] border border-[rgba(0,229,255,0.25)]' },
+  { icon: 'bg-gradient-to-br from-[rgba(224,64,251,0.25)] to-[rgba(224,64,251,0.05)] border border-[rgba(224,64,251,0.3)]' },
+  { icon: 'bg-gradient-to-br from-[rgba(124,58,237,0.3)] to-[rgba(124,58,237,0.08)] border border-[rgba(124,58,237,0.35)]' },
 ];
 
 const Index = () => {
@@ -76,34 +77,17 @@ const Index = () => {
   ];
 
   return (
-    <div className="relative min-h-screen overflow-hidden party-gradient-bg">
+    <div className="relative min-h-screen overflow-x-hidden party-gradient-bg scroll-smooth">
       <PartyBackground />
+      <Navbar user={user} onSignOut={signOut} />
 
-      <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-7">
-        {/* Header */}
-        <header className="flex items-center justify-between py-4 sm:py-5 border-b border-foreground/5">
-          <div className="flex items-center gap-2">
-            <img src={vibeJamLogo} alt="VibeJam logo" className="w-8 h-8 sm:w-9 sm:h-9 rounded-[10px]" />
-            <span className="font-bold text-[15px] sm:text-[17px] tracking-tight">VibeJam</span>
-            <Equalizer isPlaying barCount={5} className="ml-0.5" />
-          </div>
-          {user && (
-            <button
-              onClick={signOut}
-              className="bg-transparent border border-foreground/10 rounded-lg px-3 sm:px-[18px] py-1.5 sm:py-2 text-muted-foreground text-sm
-                hover:border-foreground/25 hover:text-foreground transition-all"
-            >
-              Sign Out
-            </button>
-          )}
-        </header>
-
+      <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 pt-14 md:pt-16">
         {/* Hero */}
-        <section className="text-center py-10 sm:py-20 pb-8 sm:pb-14">
-          <div className="flex justify-center mb-4 sm:mb-6">
-            <img src={vibeJamLogo} alt="VibeJam" className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl shadow-[0_0_40px_rgba(0,245,255,0.3)]" />
+        <section id="hero" className="text-center py-8 sm:py-16 md:py-20 pb-6 sm:pb-10 md:pb-14">
+          <div className="flex justify-center mb-3 sm:mb-5">
+            <img src={vibeJamLogo} alt="BeatBaaja" className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl shadow-[0_0_40px_rgba(0,245,255,0.3)]" />
           </div>
-          <h1 className="font-extrabold text-[clamp(36px,9vw,88px)] leading-none tracking-[-2px] sm:tracking-[-3px] mb-3 sm:mb-4">
+          <h1 className="font-extrabold text-[clamp(32px,8vw,88px)] leading-[1.05] tracking-[-1px] sm:tracking-[-2px] md:tracking-[-3px] mb-2 sm:mb-4">
             <span className="gradient-text">Vote</span>
             <span className="text-foreground/15">.</span>{' '}
             <span className="gradient-text-accent">Play</span>
@@ -111,32 +95,35 @@ const Index = () => {
             <span className="gradient-text">Party</span>
             <span className="text-foreground/15">.</span>
           </h1>
-          <p className="text-base sm:text-xl font-bold gradient-text-accent mb-1 sm:mb-2">
+          <p className="text-[clamp(14px,2.5vw,20px)] font-bold gradient-text-accent mb-1 sm:mb-2">
             The crowd is the DJ.
           </p>
-          <p className="text-[14px] sm:text-[16px] text-muted-foreground max-w-[520px] mx-auto leading-[1.6] px-2">
+          <p className="text-[clamp(13px,2vw,16px)] text-muted-foreground max-w-[520px] mx-auto leading-relaxed px-2">
             Create a session, share the QR code, and let your guests choose the music.
           </p>
         </section>
 
         {/* Features */}
         <motion.div
+          id="features"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6"
+          className="grid grid-cols-1 xs:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8"
         >
           {features.map((feature, i) => (
             <motion.div
               key={i}
               variants={itemVariants}
-              className={`group relative flex flex-col items-center p-3 sm:p-7 rounded-[14px] sm:rounded-[18px] glass-heavy overflow-hidden transition-all`}
+              className="group relative flex flex-row xs:flex-col items-center xs:items-center gap-3 xs:gap-0 p-4 sm:p-6 md:p-7 rounded-2xl glass-heavy overflow-hidden transition-all"
             >
-              <div className={`w-10 h-10 sm:w-[60px] sm:h-[60px] rounded-xl sm:rounded-2xl flex items-center justify-center mb-2 sm:mb-[18px] ${featureColors[i].icon}`}>
-                <feature.icon className="h-4 w-4 sm:h-[22px] sm:w-[22px]" style={{ color: i === 0 ? '#00e5ff' : i === 1 ? '#e040fb' : '#a78bfa' }} />
+              <div className={`w-11 h-11 sm:w-12 sm:h-12 md:w-[60px] md:h-[60px] rounded-xl md:rounded-2xl flex items-center justify-center xs:mb-3 md:mb-[18px] shrink-0 ${featureColors[i].icon}`}>
+                <feature.icon className="h-5 w-5 md:h-[22px] md:w-[22px]" style={{ color: i === 0 ? '#00e5ff' : i === 1 ? '#e040fb' : '#a78bfa' }} />
               </div>
-              <h3 className="font-bold text-[12px] sm:text-[15px] mb-0.5 sm:mb-1.5 tracking-tight text-center">{feature.title}</h3>
-              <p className="text-[11px] sm:text-[13px] text-muted-foreground text-center leading-relaxed hidden sm:block">{feature.desc}</p>
+              <div className="xs:text-center">
+                <h3 className="font-bold text-[clamp(13px,2vw,15px)] mb-0.5 sm:mb-1 tracking-tight">{feature.title}</h3>
+                <p className="text-[clamp(12px,1.8vw,13px)] text-muted-foreground leading-relaxed">{feature.desc}</p>
+              </div>
             </motion.div>
           ))}
         </motion.div>
@@ -146,17 +133,18 @@ const Index = () => {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid md:grid-cols-2 gap-4 mb-16 sm:mb-28"
+          className="grid md:grid-cols-2 gap-4 mb-12 sm:mb-20 md:mb-28"
         >
           {/* Host Panel */}
           <motion.div
+            id="host"
             variants={itemVariants}
-            className="relative rounded-[18px] sm:rounded-[22px] glass-heavy p-5 sm:p-8 overflow-hidden"
+            className="relative rounded-2xl md:rounded-[22px] glass-heavy p-5 sm:p-6 md:p-8 overflow-hidden"
           >
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-4 sm:mb-5">
                 <Flame className="h-5 w-5 text-primary" />
-                <h2 className="font-extrabold text-[18px] sm:text-[22px] tracking-tight">Host a Party</h2>
+                <h2 className="font-extrabold text-[clamp(16px,3vw,22px)] tracking-tight">Host a Party</h2>
               </div>
 
               {authLoading ? (
@@ -165,10 +153,10 @@ const Index = () => {
                 </div>
               ) : user ? (
                 <div className="space-y-3 sm:space-y-4">
-                  <div className="flex items-center gap-2 p-2 sm:p-2.5 px-3 rounded-[10px]"
+                  <div className="flex items-center gap-2 p-2.5 px-3 rounded-[10px]"
                     style={{ background: 'rgba(0,229,255,0.05)', border: '1px solid rgba(0,229,255,0.12)' }}>
                     <div className="w-2 h-2 rounded-full bg-primary animate-pulse-glow shrink-0" />
-                    <span className="text-[12px] sm:text-[13px] text-primary font-medium truncate">{user.email}</span>
+                    <span className="text-[clamp(12px,2vw,13px)] text-primary font-medium truncate">{user.email}</span>
                   </div>
                   <div>
                     <Label className="text-[13px] font-semibold text-muted-foreground">Session Name</Label>
@@ -176,11 +164,11 @@ const Index = () => {
                       placeholder="My Awesome Party 🎉"
                       value={sessionName}
                       onChange={(e) => setSessionName(e.target.value)}
-                      className="mt-1.5 sm:mt-2 bg-foreground/[0.04] border-foreground/[0.09] placeholder:text-muted-foreground/40
-                        focus:border-primary/40 focus:bg-primary/5"
+                      className="mt-1.5 bg-foreground/[0.04] border-foreground/[0.09] placeholder:text-muted-foreground/40
+                        focus:border-primary/40 focus:bg-primary/5 min-h-[44px]"
                     />
                   </div>
-                  <Button onClick={createSession} disabled={isSubmitting} className="w-full glow-cyan font-semibold text-[14px] sm:text-[15px] py-3">
+                  <Button onClick={createSession} disabled={isSubmitting} className="w-full glow-cyan font-semibold text-[clamp(13px,2vw,15px)] py-3 min-h-[44px]">
                     Create Session
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -193,7 +181,7 @@ const Index = () => {
                       type="email" placeholder="you@example.com"
                       value={email} onChange={(e) => setEmail(e.target.value)}
                       className="mt-1.5 bg-foreground/[0.04] border-foreground/[0.09] placeholder:text-muted-foreground/40
-                        focus:border-primary/40 focus:bg-primary/5"
+                        focus:border-primary/40 focus:bg-primary/5 min-h-[44px]"
                       required
                     />
                   </div>
@@ -203,17 +191,17 @@ const Index = () => {
                       type="password" placeholder="••••••••"
                       value={password} onChange={(e) => setPassword(e.target.value)}
                       className="mt-1.5 bg-foreground/[0.04] border-foreground/[0.09] placeholder:text-muted-foreground/40
-                        focus:border-primary/40 focus:bg-primary/5"
+                        focus:border-primary/40 focus:bg-primary/5 min-h-[44px]"
                       required minLength={6}
                     />
                   </div>
-                  <Button type="submit" disabled={isSubmitting} className="w-full glow-cyan font-semibold text-[14px] sm:text-[15px] py-3">
+                  <Button type="submit" disabled={isSubmitting} className="w-full glow-cyan font-semibold text-[clamp(13px,2vw,15px)] py-3 min-h-[44px]">
                     {isLogin ? 'Sign In' : 'Create Account'}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                   <button
                     type="button" onClick={() => setIsLogin(!isLogin)}
-                    className="text-sm text-muted-foreground hover:text-primary w-full text-center transition-colors"
+                    className="text-sm text-muted-foreground hover:text-primary w-full text-center transition-colors py-2 min-h-[44px]"
                   >
                     {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
                   </button>
@@ -224,15 +212,16 @@ const Index = () => {
 
           {/* Join Panel */}
           <motion.div
+            id="join"
             variants={itemVariants}
-            className="relative rounded-[18px] sm:rounded-[22px] glass-heavy p-5 sm:p-8 overflow-hidden"
+            className="relative rounded-2xl md:rounded-[22px] glass-heavy p-5 sm:p-6 md:p-8 overflow-hidden"
           >
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-4 sm:mb-5">
                 <Users className="h-5 w-5 text-accent" />
-                <h2 className="font-extrabold text-[18px] sm:text-[22px] tracking-tight">Join a Party</h2>
+                <h2 className="font-extrabold text-[clamp(16px,3vw,22px)] tracking-tight">Join a Party</h2>
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-4 sm:mb-5">
+              <p className="text-[clamp(13px,2vw,15px)] text-muted-foreground leading-relaxed mb-4 sm:mb-5">
                 Got a session code or QR link? Enter it below!
               </p>
               <div className="space-y-3 sm:space-y-4">
@@ -242,10 +231,10 @@ const Index = () => {
                     placeholder="Paste session link or ID"
                     value={joinCode} onChange={(e) => setJoinCode(e.target.value)}
                     className="mt-1.5 bg-foreground/[0.04] border-foreground/[0.09] placeholder:text-muted-foreground/40
-                      focus:border-accent/40 focus:bg-accent/5"
+                      focus:border-accent/40 focus:bg-accent/5 min-h-[44px]"
                   />
                 </div>
-                <Button onClick={handleJoinSession} className="w-full glow-magenta font-semibold text-[14px] sm:text-[15px] py-3">
+                <Button onClick={handleJoinSession} className="w-full glow-magenta font-semibold text-[clamp(13px,2vw,15px)] py-3 min-h-[44px]">
                   Join Session
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -256,7 +245,7 @@ const Index = () => {
 
         {/* Footer */}
         <footer className="text-center pb-6 sm:pb-8 text-xs text-muted-foreground/50">
-          VibeJam — The crowd is the DJ.
+          BeatBaaja — The crowd is the DJ.
         </footer>
       </div>
     </div>
