@@ -12,7 +12,8 @@ interface NavbarProps {
 
 const navLinks = [
   { label: 'Home', href: '#hero' },
-  { label: 'Features', href: '#features' },
+  { label: 'Services', href: '#services' },
+  { label: 'Gallery', href: '#portfolio' },
   { label: 'Host', href: '#host' },
   { label: 'Join', href: '#join' },
 ];

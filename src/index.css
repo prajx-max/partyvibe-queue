@@ -167,8 +167,18 @@
     animation: equalizer 0.8s ease-in-out infinite alternate;
   }
   @keyframes equalizer {
-    0% { height: 4px; }
+  0% { height: 4px; }
     100% { height: 16px; }
+  }
+
+  /* Hide scrollbar for filter tabs */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
   }
 }
 
