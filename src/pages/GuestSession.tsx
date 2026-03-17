@@ -69,9 +69,7 @@ export default function GuestSession() {
   };
 
   const filteredSongs = songs?.filter(
-    (song) =>
-      song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (song.artist && song.artist.toLowerCase().includes(searchQuery.toLowerCase()))
+    (song) => song.title.toLowerCase().includes(searchQuery.toLowerCase()) || (song.artist && song.artist.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   if (sessionLoading) {
@@ -96,19 +94,19 @@ export default function GuestSession() {
     <div className="min-h-screen party-gradient-bg">
       <PartyBackground />
 
-      <header className="sticky top-0 z-50 border-b border-border/50 glass-heavy">
-        <div className="container mx-auto flex items-center justify-between p-3 sm:p-4">
+      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/90 backdrop-blur-xl">
+        <div className="max-w-lg mx-auto flex items-center justify-between p-3 sm:p-4">
           <div className="flex items-center gap-2">
-            <img src={vibeJamLogo} alt="VibeJam" className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg" />
+            <img src={vibeJamLogo} alt="BeatBaaja" className="h-7 w-7 rounded-lg" />
             <span className="font-display font-bold text-sm sm:text-base truncate">{session.name}</span>
           </div>
           {!session.is_voting_open && (
-            <span className="text-xs bg-destructive/20 text-destructive px-2 py-1 rounded-full">Locked</span>
+            <span className="text-xs bg-destructive/20 text-destructive px-2.5 py-1 rounded-full font-medium">Locked</span>
           )}
         </div>
       </header>
 
-      <main className="container mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6 relative z-10 max-w-lg">
+      <main className="max-w-lg mx-auto p-4 space-y-4 sm:space-y-6 relative z-10">
         <GuestSongRequest sessionId={sessionId!} onSongRequested={() => refetchSongs()} />
         <NowPlayingCard song={currentSong} isPlaying={true} progress={50} />
         <UpNextCard song={upNextSong} />
@@ -118,23 +116,13 @@ export default function GuestSession() {
             <h2 className="font-display text-base sm:text-lg font-semibold">Vote for Songs</h2>
             <span className="text-sm text-muted-foreground">{songs?.length || 0} songs</span>
           </div>
-
           <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search songs..." />
-
           <div className="mt-3 sm:mt-4 space-y-2">
             <AnimatePresence>
               {filteredSongs?.map((song, index) => (
-                <SongCard
-                  key={song.id}
-                  song={song}
-                  rank={index + 1}
-                  onVote={handleVote}
-                  isVoting={votingInProgress === song.id}
-                  votingLocked={!session.is_voting_open}
-                />
+                <SongCard key={song.id} song={song} rank={index + 1} onVote={handleVote} isVoting={votingInProgress === song.id} votingLocked={!session.is_voting_open} />
               ))}
             </AnimatePresence>
-
             {(!filteredSongs || filteredSongs.length === 0) && !songsLoading && (
               <div className="py-8 sm:py-12 text-center">
                 <Music className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />

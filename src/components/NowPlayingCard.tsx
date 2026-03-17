@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { Music, Pause, Play } from 'lucide-react';
 import { SongWithVotes } from '@/hooks/useSongs';
 import { Equalizer } from '@/components/Equalizer';
@@ -19,11 +18,10 @@ export function NowPlayingCard({ song, isPlaying, progress, onPlayPause, isHost 
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl glass-heavy p-4 sm:p-6 neon-border">
-      {/* Background glow - CSS only, no framer-motion */}
+    <div className="relative overflow-hidden rounded-xl glass-heavy p-4 sm:p-6 neon-border">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -left-20 -top-20 h-32 w-32 sm:h-44 sm:w-44 rounded-full bg-primary/15 blur-3xl animate-pulse-glow" />
-        <div className="absolute -bottom-20 -right-20 h-32 w-32 sm:h-44 sm:w-44 rounded-full bg-accent/15 blur-3xl animate-pulse-magenta" />
+        <div className="absolute -left-20 -top-20 h-32 w-32 sm:h-44 sm:w-44 rounded-full bg-primary/10 blur-3xl animate-pulse-glow" />
+        <div className="absolute -bottom-20 -right-20 h-32 w-32 sm:h-44 sm:w-44 rounded-full bg-primary/5 blur-3xl animate-pulse-magenta" />
       </div>
 
       <div className="relative z-10">
@@ -43,9 +41,8 @@ export function NowPlayingCard({ song, isPlaying, progress, onPlayPause, isHost 
         {song ? (
           <>
             <div className="flex items-start gap-3 sm:gap-4">
-              {/* Album cover - smaller on mobile, no rotation animation */}
-              <div className="flex h-14 w-14 sm:h-20 sm:w-20 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-secondary to-accent shrink-0 shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
-                <Music className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
+              <div className="flex h-14 w-14 sm:h-20 sm:w-20 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 shrink-0">
+                <Music className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
                 <h2 className="font-display text-lg sm:text-2xl font-bold tracking-tight truncate">{song.title}</h2>
@@ -59,18 +56,17 @@ export function NowPlayingCard({ song, isPlaying, progress, onPlayPause, isHost 
               {isHost && onPlayPause && (
                 <button
                   onClick={onPlayPause}
-                  className="flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-primary text-primary-foreground glow-cyan shrink-0 active:scale-95 transition-transform"
+                  className="flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-primary text-primary-foreground glow-primary shrink-0 active:scale-95 transition-transform"
                 >
                   {isPlaying ? <Pause className="h-5 w-5 sm:h-6 sm:w-6" /> : <Play className="h-5 w-5 sm:h-6 sm:w-6 ml-0.5" />}
                 </button>
               )}
             </div>
 
-            {/* Progress bar */}
             <div className="mt-4 sm:mt-6">
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-primary via-secondary to-accent transition-[width] duration-100"
+                  className="h-full rounded-full bg-primary transition-[width] duration-100"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -82,13 +78,12 @@ export function NowPlayingCard({ song, isPlaying, progress, onPlayPause, isHost 
               )}
             </div>
 
-            {/* CSS-only soundwave - 16 bars instead of 32 */}
             {isPlaying && (
               <div className="mt-3 sm:mt-4 flex items-end justify-center gap-[3px] h-6 sm:h-8">
                 {Array.from({ length: 16 }).map((_, i) => (
                   <div
                     key={i}
-                    className="w-[2px] sm:w-[3px] rounded-full bg-gradient-to-t from-primary to-accent equalizer-bar"
+                    className="w-[2px] sm:w-[3px] rounded-full bg-primary equalizer-bar"
                     style={{ animationDelay: `${i * 0.05}s`, animationDuration: `${0.4 + (i % 5) * 0.15}s` }}
                   />
                 ))}
