@@ -16,7 +16,7 @@ export function SearchBar({ value, onChange, placeholder = 'Search songs...' }: 
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="pl-10 bg-card border-border focus:border-primary focus:ring-primary"
+        className="pl-10 bg-card border-border focus:border-primary focus:ring-primary rounded-lg min-h-[44px]"
       />
     </div>
   );
