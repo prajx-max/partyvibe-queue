@@ -15,7 +15,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
-        display: ['Plus Jakarta Sans', 'sans-serif'],
+        display: ['Space Grotesk', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -51,6 +51,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        neon: {
+          cyan: "hsl(var(--neon-cyan))",
+          magenta: "hsl(var(--neon-magenta))",
+          purple: "hsl(var(--neon-purple))",
+          green: "hsl(var(--neon-green))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -77,8 +83,8 @@ export default {
           to: { height: "0" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 16px hsl(145, 80%, 42%, 0.2)" },
-          "50%": { boxShadow: "0 0 32px hsl(145, 80%, 42%, 0.35)" },
+          "0%, 100%": { boxShadow: "0 0 20px hsl(185, 100%, 50%, 0.3)" },
+          "50%": { boxShadow: "0 0 40px hsl(185, 100%, 50%, 0.5)" },
         },
         "slide-up": {
           from: { opacity: "0", transform: "translateY(10px)" },
