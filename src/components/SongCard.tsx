@@ -1,5 +1,6 @@
+import { memo } from 'react';
 import { motion } from 'framer-motion';
-import { Music, Trash2, ChevronUp, Play } from 'lucide-react';
+import { Music, Trash2, ChevronUp, Play, Pin, PinOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SongWithVotes } from '@/hooks/useSongs';
 
@@ -9,14 +10,16 @@ interface SongCardProps {
   onVote: (songId: string) => void;
   onRemove?: (songId: string) => void;
   onPlay?: (songId: string) => void;
+  onTogglePin?: (songId: string, pinned: boolean) => void;
   isVoting?: boolean;
   isHost?: boolean;
   votingLocked?: boolean;
   isCurrentSong?: boolean;
 }
 
-export function SongCard({ song, rank, onVote, onRemove, onPlay, isVoting, isHost, votingLocked, isCurrentSong }: SongCardProps) {
+function SongCardInner({ song, rank, onVote, onRemove, onPlay, onTogglePin, isVoting, isHost, votingLocked, isCurrentSong }: SongCardProps) {
   const isTopSong = rank === 1 && song.vote_count > 0;
+  const isPinned = !!song.pinned_at;
 
   return (
     <motion.div
@@ -26,7 +29,13 @@ export function SongCard({ song, rank, onVote, onRemove, onPlay, isVoting, isHos
       transition={{ duration: 0.2 }}
       layout
       className={`group relative flex items-center gap-2 sm:gap-3 rounded-xl glass-heavy p-2.5 sm:p-3 transition-all ${
-        isCurrentSong ? 'ring-2 ring-primary/60 bg-primary/5' : isTopSong ? 'neon-border animate-pulse-glow' : 'border border-border/50'
+        isCurrentSong
+          ? 'ring-2 ring-primary/60 bg-primary/5'
+          : isPinned
+            ? 'ring-1 ring-accent/50 bg-accent/[0.04]'
+            : isTopSong
+              ? 'neon-border'
+              : 'border border-border/50'
       }`}
     >
       {/* Rank badge */}
@@ -39,12 +48,18 @@ export function SongCard({ song, rank, onVote, onRemove, onPlay, isVoting, isHos
               : 'text-muted-foreground'
         }`}
       >
-        {rank === 1 ? '👑' : rank}
+        {isPinned ? '📌' : rank === 1 ? '👑' : rank}
       </span>
 
-      {/* Song icon - hidden on very small screens */}
-      <div className="hidden sm:flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary/10 to-accent/10 shrink-0">
-        <Music className="h-4 w-4 text-primary" />
+      {/* Album art */}
+      <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-lg overflow-hidden shrink-0 ring-1 ring-white/5">
+        {song.image_url ? (
+          <img src={song.image_url} alt="" loading="lazy" className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/15 to-accent/15">
+            <Music className="h-4 w-4 text-primary" />
+          </div>
+        )}
       </div>
 
       {/* Song info */}
@@ -63,6 +78,7 @@ export function SongCard({ song, rank, onVote, onRemove, onPlay, isVoting, isHos
       <button
         disabled={isVoting || votingLocked}
         onClick={() => onVote(song.id)}
+        aria-label={song.user_voted ? 'Remove vote' : 'Vote for song'}
         className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl transition-all disabled:opacity-50 active:scale-90 ${
           song.user_voted
             ? 'bg-primary/20 text-primary neon-border'
@@ -72,15 +88,28 @@ export function SongCard({ song, rank, onVote, onRemove, onPlay, isVoting, isHos
         <ChevronUp className={`h-5 w-5 transition-all ${song.user_voted ? 'text-primary' : ''}`} />
       </button>
 
-      {/* Host controls: Play & Remove */}
+      {/* Host controls: Pin, Play & Remove */}
       {isHost && (
         <div className="flex items-center gap-1 shrink-0">
+          {onTogglePin && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-8 w-8 ${isPinned ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
+              onClick={() => onTogglePin(song.id, !isPinned)}
+              aria-label={isPinned ? 'Unpin song' : 'Pin to play next'}
+              title={isPinned ? 'Unpin' : 'Pin to play next'}
+            >
+              {isPinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
+            </Button>
+          )}
           {onPlay && !isCurrentSong && (
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-muted-foreground hover:text-primary"
               onClick={() => onPlay(song.id)}
+              aria-label="Play this song now"
               title="Play this song now"
             >
               <Play className="h-3.5 w-3.5" />
@@ -92,6 +121,7 @@ export function SongCard({ song, rank, onVote, onRemove, onPlay, isVoting, isHos
               size="icon"
               className="h-8 w-8 text-muted-foreground hover:text-destructive"
               onClick={() => onRemove(song.id)}
+              aria-label="Remove song"
               title="Remove song"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -102,3 +132,5 @@ export function SongCard({ song, rank, onVote, onRemove, onPlay, isVoting, isHos
     </motion.div>
   );
 }
+
+export const SongCard = memo(SongCardInner);
