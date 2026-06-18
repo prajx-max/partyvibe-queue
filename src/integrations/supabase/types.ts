@@ -66,7 +66,9 @@ export type Database = {
           file_url: string
           first_vote_at: string | null
           id: string
+          image_url: string | null
           is_active: boolean
+          pinned_at: string | null
           session_id: string
           title: string
         }
@@ -77,7 +79,9 @@ export type Database = {
           file_url: string
           first_vote_at?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
+          pinned_at?: string | null
           session_id: string
           title: string
         }
@@ -88,7 +92,9 @@ export type Database = {
           file_url?: string
           first_vote_at?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
+          pinned_at?: string | null
           session_id?: string
           title?: string
         }
