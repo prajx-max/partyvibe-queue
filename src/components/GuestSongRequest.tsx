@@ -62,6 +62,7 @@ export function GuestSongRequest({ sessionId, onSongRequested }: GuestSongReques
         artist: track.artist,
         duration: track.duration,
         file_url: track.audioUrl,
+        image_url: track.imageUrl,
       });
 
       if (error) throw error;

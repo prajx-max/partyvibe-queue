@@ -12,6 +12,8 @@ export interface SongWithVotes {
   is_active: boolean;
   added_at: string;
   first_vote_at: string | null;
+  image_url: string | null;
+  pinned_at: string | null;
   vote_count: number;
   user_voted: boolean;
 }
@@ -52,8 +54,13 @@ export function useSongs(sessionId: string | undefined, voterId: string | null) 
         };
       });
 
-      // Sort by votes (desc), then by first_vote_at (asc) for tie-breaking
+      // Sort: pinned songs first (latest pin wins), then votes desc, then earliest vote, then added order
       return songsWithVotes.sort((a, b) => {
+        if (a.pinned_at && !b.pinned_at) return -1;
+        if (!a.pinned_at && b.pinned_at) return 1;
+        if (a.pinned_at && b.pinned_at) {
+          return new Date(b.pinned_at).getTime() - new Date(a.pinned_at).getTime();
+        }
         if (b.vote_count !== a.vote_count) {
           return b.vote_count - a.vote_count;
         }

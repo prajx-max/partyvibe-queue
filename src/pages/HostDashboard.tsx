@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { Lock, Unlock, RotateCcw, ArrowLeft } from 'lucide-react';
@@ -66,7 +66,7 @@ export default function HostDashboard() {
     }
   };
 
-  const handlePlaySong = (songId: string) => {
+  const handlePlaySong = useCallback((songId: string) => {
     const song = songs?.find(s => s.id === songId);
     if (song) {
       setCurrentSong(song);
@@ -74,7 +74,22 @@ export default function HostDashboard() {
       setProgress(0);
       toast.success(`Now playing: ${song.title}`);
     }
-  };
+  }, [songs]);
+
+  const handleTogglePin = useCallback(async (songId: string, pin: boolean) => {
+    if (!sessionId) return;
+    const { error } = await supabase
+      .from('songs')
+      .update({ pinned_at: pin ? new Date().toISOString() : null })
+      .eq('id', songId)
+      .eq('session_id', sessionId);
+    if (error) {
+      toast.error('Failed to update pin');
+      return;
+    }
+    refetchSongs();
+    toast.success(pin ? 'Pinned to play next' : 'Unpinned');
+  }, [sessionId, refetchSongs]);
 
   const toggleVoting = async () => {
     if (!session) return;
@@ -126,12 +141,15 @@ export default function HostDashboard() {
     toast.success('Song removed');
   };
 
-  const handleVote = async () => { toast.info('Use the guest page to vote!'); };
+  const handleVote = useCallback(() => { toast.info('Use the guest page to vote!'); }, []);
 
-  const filteredSongs = songs?.filter(
-    (song) =>
-      song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (song.artist && song.artist.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredSongs = useMemo(
+    () => songs?.filter(
+      (song) =>
+        song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (song.artist && song.artist.toLowerCase().includes(searchQuery.toLowerCase()))
+    ),
+    [songs, searchQuery]
   );
 
   const upNextSong = songs && songs.length > 1 ? songs.find(s => s.id !== currentSong?.id) : null;
@@ -197,7 +215,18 @@ export default function HostDashboard() {
               <div className="mt-3 sm:mt-4 space-y-2 max-h-[350px] sm:max-h-[400px] overflow-y-auto">
                 <AnimatePresence>
                   {filteredSongs?.map((song, index) => (
-                    <SongCard key={song.id} song={song} rank={index + 1} onVote={handleVote} onRemove={removeSong} onPlay={handlePlaySong} isHost votingLocked={!session.is_voting_open} isCurrentSong={currentSong?.id === song.id} />
+                    <SongCard
+                      key={song.id}
+                      song={song}
+                      rank={index + 1}
+                      onVote={handleVote}
+                      onRemove={removeSong}
+                      onPlay={handlePlaySong}
+                      onTogglePin={handleTogglePin}
+                      isHost
+                      votingLocked={!session.is_voting_open}
+                      isCurrentSong={currentSong?.id === song.id}
+                    />
                   ))}
                 </AnimatePresence>
                 {(!filteredSongs || filteredSongs.length === 0) && (
