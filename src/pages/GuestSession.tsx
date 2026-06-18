@@ -8,6 +8,7 @@ import { UpNextCard } from '@/components/UpNextCard';
 import { SongCard } from '@/components/SongCard';
 import { SearchBar } from '@/components/SearchBar';
 import { GuestSongRequest } from '@/components/GuestSongRequest';
+import { MobileMiniPlayer } from '@/components/MobileMiniPlayer';
 import { useSession } from '@/hooks/useSession';
 import { useSongs } from '@/hooks/useSongs';
 import { useVoterId } from '@/hooks/useVoterId';
@@ -108,7 +109,7 @@ export default function GuestSession() {
         </div>
       </header>
 
-      <main className="container mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6 relative z-10 max-w-lg">
+      <main className="container mx-auto p-3 sm:p-4 pb-24 md:pb-4 space-y-4 sm:space-y-6 relative z-10 max-w-lg">
         <GuestSongRequest sessionId={sessionId!} onSongRequested={() => refetchSongs()} />
         <NowPlayingCard song={currentSong} isPlaying={true} progress={50} />
         <UpNextCard song={upNextSong} />
@@ -145,6 +146,8 @@ export default function GuestSession() {
           </div>
         </div>
       </main>
+
+      <MobileMiniPlayer song={currentSong} upNext={upNextSong} isPlaying={true} progress={50} />
     </div>
   );
 }
