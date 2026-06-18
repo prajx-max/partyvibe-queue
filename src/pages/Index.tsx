@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Users, Zap, Radio, ArrowRight, Flame } from 'lucide-react';
+import { Users, Zap, Radio, ArrowRight, Flame, Sparkles, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -83,24 +83,124 @@ const Index = () => {
 
       <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 pt-14 md:pt-16">
         {/* Hero */}
-        <section id="hero" className="text-center py-8 sm:py-16 md:py-20 pb-6 sm:pb-10 md:pb-14">
-          <div className="flex justify-center mb-3 sm:mb-5">
-            <img src={vibeJamLogo} alt="BeatBaaja" className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl shadow-[0_0_40px_rgba(0,245,255,0.3)]" />
-          </div>
-          <h1 className="font-extrabold text-[clamp(32px,8vw,88px)] leading-[1.05] tracking-[-1px] sm:tracking-[-2px] md:tracking-[-3px] mb-2 sm:mb-4">
+        <section id="hero" className="relative text-center pt-10 sm:pt-20 md:pt-24 pb-8 sm:pb-14 md:pb-16">
+          {/* Eyebrow chip */}
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-full mb-5 sm:mb-7 text-[11px] sm:text-xs font-semibold tracking-wide uppercase glass-heavy border border-primary/20"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-secondary">
+              Live · Real-time · Crowd-Powered
+            </span>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.05 }}
+            className="flex justify-center mb-4 sm:mb-6 relative"
+          >
+            <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-primary/20 blur-3xl animate-pulse-glow" />
+            </div>
+            <img
+              src={vibeJamLogo}
+              alt="BeatBaaja"
+              className="relative w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl shadow-[0_0_60px_rgba(0,229,255,0.45)] ring-1 ring-white/10"
+            />
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="font-extrabold text-[clamp(36px,9vw,104px)] leading-[0.95] tracking-[-1px] sm:tracking-[-2px] md:tracking-[-4px] mb-3 sm:mb-5"
+          >
             <span className="gradient-text">Vote</span>
             <span className="text-foreground/15">.</span>{' '}
             <span className="gradient-text-accent">Play</span>
             <span className="text-foreground/15">.</span>{' '}
             <span className="gradient-text">Party</span>
-            <span className="text-foreground/15">.</span>
-          </h1>
-          <p className="text-[clamp(14px,2.5vw,20px)] font-bold gradient-text-accent mb-1 sm:mb-2">
+            <span className="text-primary">.</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.18 }}
+            className="text-[clamp(15px,2.6vw,22px)] font-bold gradient-text-accent mb-2"
+          >
             The crowd is the DJ.
-          </p>
-          <p className="text-[clamp(13px,2vw,16px)] text-muted-foreground max-w-[520px] mx-auto leading-relaxed px-2">
-            Create a session, share the QR code, and let your guests choose the music.
-          </p>
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.24 }}
+            className="text-[clamp(13px,2vw,17px)] text-muted-foreground max-w-[560px] mx-auto leading-relaxed px-2 mb-7 sm:mb-9"
+          >
+            Spin up a session, drop a QR code, and let every phone in the room shape the night.
+          </motion.p>
+
+          {/* Dual CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-8 sm:mb-12"
+          >
+            <Button
+              onClick={() => document.querySelector('#host')?.scrollIntoView({ behavior: 'smooth' })}
+              className="glow-cyan font-semibold text-sm sm:text-base px-6 py-3 min-h-[48px] w-full sm:w-auto"
+            >
+              <Play className="mr-2 h-4 w-4 fill-current" />
+              Start a Party
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => document.querySelector('#join')?.scrollIntoView({ behavior: 'smooth' })}
+              className="font-semibold text-sm sm:text-base px-6 py-3 min-h-[48px] w-full sm:w-auto bg-foreground/[0.03] border-foreground/15 hover:bg-foreground/[0.06] hover:border-primary/40"
+            >
+              Join with Code
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </motion.div>
+
+          {/* Live visualizer accent */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="flex items-end justify-center gap-[3px] sm:gap-1 h-10 sm:h-14 mb-6 sm:mb-8"
+            aria-hidden="true"
+          >
+            {Array.from({ length: 32 }).map((_, i) => (
+              <div
+                key={i}
+                className="w-[3px] sm:w-[4px] rounded-full bg-gradient-to-t from-primary/80 via-secondary/80 to-accent/80 equalizer-bar"
+                style={{
+                  animationDelay: `${(i % 8) * 0.06}s`,
+                  animationDuration: `${0.5 + (i % 6) * 0.13}s`,
+                  opacity: 0.4 + ((Math.abs(16 - i)) / 16) * 0.6 * -1 + 0.7,
+                }}
+              />
+            ))}
+          </motion.div>
+
+          {/* Social proof strip */}
+          <div className="flex flex-wrap items-center justify-center gap-x-5 sm:gap-x-8 gap-y-2 text-xs sm:text-sm text-muted-foreground/80">
+            <div className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#1DB954] animate-pulse" />
+              <span>Live now</span>
+            </div>
+            <div className="hidden sm:block w-px h-3 bg-border" />
+            <div>No installs · works on any phone</div>
+            <div className="hidden sm:block w-px h-3 bg-border" />
+            <div>Real-time voting</div>
+          </div>
         </section>
 
         {/* Features */}
