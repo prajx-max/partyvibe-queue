@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { Music, Pause, Play } from 'lucide-react';
 import { SongWithVotes } from '@/hooks/useSongs';
 import { Equalizer } from '@/components/Equalizer';
@@ -43,9 +42,20 @@ export function NowPlayingCard({ song, isPlaying, progress, onPlayPause, isHost 
         {song ? (
           <>
             <div className="flex items-start gap-3 sm:gap-4">
-              {/* Album cover - smaller on mobile, no rotation animation */}
-              <div className="flex h-14 w-14 sm:h-20 sm:w-20 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-secondary to-accent shrink-0 shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
-                <Music className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
+              {/* Album cover */}
+              <div className="relative h-16 w-16 sm:h-24 sm:w-24 rounded-xl overflow-hidden shrink-0 shadow-[0_8px_32px_hsl(var(--primary)/0.35)] ring-1 ring-white/10">
+                {song.image_url ? (
+                  <img
+                    src={song.image_url}
+                    alt={song.title}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary via-secondary to-accent">
+                    <Music className="h-7 w-7 sm:h-9 sm:w-9 text-primary-foreground" />
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <h2 className="font-display text-lg sm:text-2xl font-bold tracking-tight truncate">{song.title}</h2>
@@ -59,6 +69,7 @@ export function NowPlayingCard({ song, isPlaying, progress, onPlayPause, isHost 
               {isHost && onPlayPause && (
                 <button
                   onClick={onPlayPause}
+                  aria-label={isPlaying ? 'Pause' : 'Play'}
                   className="flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-primary text-primary-foreground glow-cyan shrink-0 active:scale-95 transition-transform"
                 >
                   {isPlaying ? <Pause className="h-5 w-5 sm:h-6 sm:w-6" /> : <Play className="h-5 w-5 sm:h-6 sm:w-6 ml-0.5" />}
