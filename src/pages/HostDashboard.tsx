@@ -142,7 +142,6 @@ export default function HostDashboard() {
   };
 
   const handleVote = useCallback(() => { toast.info('Use the guest page to vote!'); }, []);
-  const handleRemoveCb = useCallback((id: string) => { removeSong(id); }, [songs, currentSong]);
 
   const filteredSongs = useMemo(
     () => songs?.filter(
