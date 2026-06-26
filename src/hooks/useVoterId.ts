@@ -28,11 +28,6 @@ export function useVoterId(sessionId: string | undefined) {
         .maybeSingle();
 
       if (existingVoter) {
-        // Update last seen
-        await supabase
-          .from('voters')
-          .update({ last_seen_at: new Date().toISOString() })
-          .eq('id', existingVoter.id);
         setVoterId(existingVoter.id);
       } else {
         // Create new voter
