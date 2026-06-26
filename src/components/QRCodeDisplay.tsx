@@ -25,7 +25,7 @@ export function QRCodeDisplay({ sessionId, sessionName }: QRCodeDisplayProps) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Join ${sessionName} on VibeJam`,
+          title: `Join ${sessionName} on PartyVibe`,
           text: 'Vote for songs at the party! 🎶',
           url: guestUrl,
         });
