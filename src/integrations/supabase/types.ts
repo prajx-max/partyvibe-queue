@@ -23,7 +23,6 @@ export type Database = {
           is_voting_open: boolean
           name: string
           now_playing_started_at: string | null
-          passcode: string | null
           updated_at: string
         }
         Insert: {
@@ -34,7 +33,6 @@ export type Database = {
           is_voting_open?: boolean
           name: string
           now_playing_started_at?: string | null
-          passcode?: string | null
           updated_at?: string
         }
         Update: {
@@ -45,7 +43,6 @@ export type Database = {
           is_voting_open?: boolean
           name?: string
           now_playing_started_at?: string | null
-          passcode?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -191,7 +188,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      delete_my_vote: {
+        Args: { p_fingerprint: string; p_song_id: string; p_voter_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
