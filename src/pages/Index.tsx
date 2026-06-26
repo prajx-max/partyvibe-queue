@@ -364,7 +364,7 @@ const Index = () => {
               A queue that actually feels alive.
             </motion.h2>
             <motion.p variants={fadeUp} className="mt-4 text-muted-foreground text-[clamp(14px,1.6vw,17px)] leading-relaxed">
-              Every vote reshuffles the queue in real time. Hosts see the room\'s energy.
+              Every vote reshuffles the queue in real time. Hosts see the room&apos;s energy.
               Guests see their picks rise to the top. Nobody fights for the aux.
             </motion.p>
             <motion.ul variants={fadeUp} className="mt-6 space-y-3 text-sm">

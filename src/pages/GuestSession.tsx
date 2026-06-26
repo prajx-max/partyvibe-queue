@@ -14,7 +14,7 @@ import { useSongs } from '@/hooks/useSongs';
 import { useVoterId } from '@/hooks/useVoterId';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import vibeJamLogo from '@/assets/vibejam-logo.png';
+import { Logo } from '@/components/Logo';
 
 const VOTE_RATE_LIMIT = 10;
 const RATE_LIMIT_WINDOW = 60000;
@@ -105,7 +105,7 @@ export default function GuestSession() {
       <header className="sticky top-0 z-50 border-b border-border/50 glass-heavy">
         <div className="container mx-auto flex items-center justify-between p-3 sm:p-4">
           <div className="flex items-center gap-2">
-            <img src={vibeJamLogo} alt="VibeJam" className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg" />
+            <Logo size={24} />
             <span className="font-display font-bold text-sm sm:text-base truncate">{session.name}</span>
           </div>
           {!session.is_voting_open && (

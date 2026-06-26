@@ -17,7 +17,7 @@ import { useSession } from '@/hooks/useSession';
 import { useSongs, SongWithVotes } from '@/hooks/useSongs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import vibeJamLogo from '@/assets/vibejam-logo.png';
+import { Logo } from '@/components/Logo';
 
 export default function HostDashboard() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -181,7 +181,7 @@ export default function HostDashboard() {
               <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
             <div className="flex items-center gap-2 min-w-0">
-              <img src={vibeJamLogo} alt="VibeJam" className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg shrink-0" />
+              <Logo size={24} />
               <span className="font-display font-bold text-sm sm:text-base truncate">{session.name}</span>
             </div>
           </div>
