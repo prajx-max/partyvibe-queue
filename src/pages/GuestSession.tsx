@@ -50,7 +50,12 @@ export default function GuestSession() {
 
     try {
       if (hasVoted) {
-        const { error } = await supabase.from('votes').delete().eq('song_id', songId).eq('voter_id', voterId);
+        const fingerprint = localStorage.getItem('partyvote_fingerprint') ?? '';
+        const { error } = await supabase.rpc('delete_my_vote', {
+          p_voter_id: voterId,
+          p_song_id: songId,
+          p_fingerprint: fingerprint,
+        });
         if (error) throw error;
       } else {
         const { error } = await supabase.from('votes').insert({ session_id: sessionId, song_id: songId, voter_id: voterId });
